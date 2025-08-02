@@ -1,26 +1,106 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{DeriveInput, Type, parse_quote};
+use syn::{
+    DeriveInput, Ident, Token, Type,
+    parse::{Parse, ParseStream},
+    parse_quote,
+};
 
-pub fn impl_add_macro(attr: Option<Type>, ast: DeriveInput) -> TokenStream {
-    let math_op = MathOp::new(MathOpTy::Add, &ast, attr);
-    math_op.generate(ast).into()
+pub fn impl_add_macro(attr: Attr, input: Input) -> TokenStream {
+    let math_op = MathOp::new(MathOpTy::Add);
+    math_op.generate(attr, input).into()
 }
 
-pub fn impl_sub_macro(attr: Option<Type>, ast: DeriveInput) -> TokenStream {
-    let math_op = MathOp::new(MathOpTy::Sub, &ast, attr);
-    math_op.generate(ast).into()
+pub fn impl_sub_macro(attr: Attr, input: Input) -> TokenStream {
+    let math_op = MathOp::new(MathOpTy::Sub);
+    math_op.generate(attr, input).into()
 }
 
-pub fn impl_mul_macro(attr: Option<Type>, ast: DeriveInput) -> TokenStream {
-    let math_op = MathOp::new(MathOpTy::Mul, &ast, attr);
-    math_op.generate(ast).into()
+pub fn impl_mul_macro(attr: Attr, input: Input) -> TokenStream {
+    let math_op = MathOp::new(MathOpTy::Mul);
+    math_op.generate(attr, input).into()
 }
 
-pub fn impl_div_macro(attr: Option<Type>, ast: DeriveInput) -> TokenStream {
-    let math_op = MathOp::new(MathOpTy::Div, &ast, attr);
-    math_op.generate(ast).into()
+pub fn impl_div_macro(attr: Attr, input: Input) -> TokenStream {
+    let math_op = MathOp::new(MathOpTy::Div);
+    math_op.generate(attr, input).into()
+}
+
+pub struct Attr {
+    pub rhs_ty: Option<Type>,
+    pub out_ty: Option<Type>,
+}
+
+impl Parse for Attr {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let mut rhs_ty: Option<Type> = None;
+        let mut out_ty: Option<Type> = None;
+
+        while !input.is_empty() {
+            let key: Ident = input.parse()?;
+            input.parse::<Token![=]>()?;
+            let val: Type = input.parse()?;
+
+            match key.to_string().as_str() {
+                "rhs" => rhs_ty = Some(val),
+                "out" => out_ty = Some(val),
+                other => {
+                    return Err(syn::Error::new(
+                        key.span(),
+                        format!("Unknown attribute key `{}`", other),
+                    ));
+                }
+            }
+
+            if input.peek(Token![,]) {
+                input.parse::<Token![,]>()?;
+            }
+        }
+
+        Ok(Self { rhs_ty, out_ty })
+    }
+}
+
+impl Attr {
+    fn unwrap(self, self_ty: &Type) -> (Type, Type) {
+        (
+            self.rhs_ty.unwrap_or_else(|| parse_quote! {#self_ty}),
+            self.out_ty.unwrap_or_else(|| parse_quote! {#self_ty}),
+        )
+    }
+}
+
+pub struct Input {
+    pub ast: DeriveInput,
+    pub ident: Ident,
+    pub fields_idents: Vec<Ident>,
+}
+
+impl Parse for Input {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let ast: DeriveInput = input.parse()?;
+        let ident = ast.ident.clone();
+        let fields = match &ast.data {
+            syn::Data::Struct(data_struct) => &data_struct.fields,
+            _ => panic!("#[MathOp] only supports structs"),
+        };
+
+        let fields_idents: Vec<_> = match fields {
+            syn::Fields::Named(named_fields) => named_fields
+                .named
+                .iter()
+                .map(|f| f.ident.clone().unwrap())
+                .collect(),
+            _ => panic!("#[MathOp] only supports structs with named fields"),
+        };
+
+        Ok(Self {
+            ast,
+            ident,
+            fields_idents,
+        })
+    }
 }
 
 enum MathOpTy {
@@ -31,8 +111,6 @@ enum MathOpTy {
 }
 
 struct MathOp {
-    pub rhs_ty: syn::Type,
-    pub is_rhs_ty_flat: bool,
     pub op: TokenStream2,
     pub op_trait: TokenStream2,
     pub op_fn: TokenStream2,
@@ -42,147 +120,127 @@ struct MathOp {
 }
 
 impl MathOp {
-    fn new(
-        op_ty: MathOpTy,
-        ast: &DeriveInput,
-        attr: Option<syn::Type>,
-    ) -> Self {
-        let rhs_ty = attr.unwrap_or_else(|| {
-            let struct_ident = &ast.ident;
-            let (_, ty_generics, _) = &ast.generics.split_for_impl();
-            parse_quote!(#struct_ident #ty_generics)
-        });
+    fn new(op_ty: MathOpTy) -> Self {
+        match op_ty {
+            MathOpTy::Add => {
+                return Self {
+                    op: quote! {+},
+                    op_trait: quote! {std::ops::Add},
+                    op_fn: quote! {add},
+                    op_assign: quote! {+=},
+                    op_assign_trait: quote! {std::ops::AddAssign},
+                    op_assign_fn: quote! {add_assign},
+                };
+            }
 
-        let is_rhs_ty_flat = if let syn::Type::Path(rhs_ty_path) = &rhs_ty {
-            let segment = rhs_ty_path.path.segments.first().unwrap();
-            segment.arguments.is_empty()
-        } else {
-            false
+            MathOpTy::Sub => {
+                return Self {
+                    op: quote! {-},
+                    op_trait: quote! {std::ops::Sub},
+                    op_fn: quote! {sub},
+                    op_assign: quote! {-=},
+                    op_assign_trait: quote! {std::ops::SubAssign},
+                    op_assign_fn: quote! {sub_assign},
+                };
+            }
+            MathOpTy::Mul => {
+                return Self {
+                    op: quote! {*},
+                    op_trait: quote! {std::ops::Mul},
+                    op_fn: quote! {mul},
+                    op_assign: quote! {*=},
+                    op_assign_trait: quote! {std::ops::MulAssign},
+                    op_assign_fn: quote! {mul_assign},
+                };
+            }
+            MathOpTy::Div => {
+                return Self {
+                    op: quote! {/},
+                    op_trait: quote! {std::ops::Div},
+                    op_fn: quote! {div},
+                    op_assign: quote! {/=},
+                    op_assign_trait: quote! {std::ops::DivAssign},
+                    op_assign_fn: quote! {div_assign},
+                };
+            }
         };
-
-        let (op, op_trait, op_fn, op_assign, op_assign_trait, op_assign_fn) =
-            match op_ty {
-                MathOpTy::Add => (
-                    quote! {+},
-                    quote! {std::ops::Add},
-                    quote! {add},
-                    quote! {+=},
-                    quote! {std::ops::AddAssign},
-                    quote! {add_assign},
-                ),
-                MathOpTy::Sub => (
-                    quote! {-},
-                    quote! {std::ops::Sub},
-                    quote! {sub},
-                    quote! {-=},
-                    quote! {std::ops::SubAssign},
-                    quote! {sub_assign},
-                ),
-                MathOpTy::Mul => (
-                    quote! {*},
-                    quote! {std::ops::Mul},
-                    quote! {mul},
-                    quote! {*=},
-                    quote! {std::ops::MulAssign},
-                    quote! {mul_assign},
-                ),
-                MathOpTy::Div => (
-                    quote! {/},
-                    quote! {std::ops::Div},
-                    quote! {div},
-                    quote! {/=},
-                    quote! {std::ops::DivAssign},
-                    quote! {div_assign},
-                ),
-            };
-
-        Self {
-            rhs_ty,
-            is_rhs_ty_flat,
-            op,
-            op_trait,
-            op_fn,
-            op_assign,
-            op_assign_trait,
-            op_assign_fn,
-        }
     }
 
-    fn generate(&self, ast: DeriveInput) -> TokenStream2 {
-        let rhs_ty = &self.rhs_ty;
-        let op = &self.op;
+    fn generate(&self, attr: Attr, input: Input) -> TokenStream2 {
+        // TODO: Modify AST to derive automatically from Clone and Copy.
         let op_trait = &self.op_trait;
-        let op_fn = &self.op_fn;
-        let op_assign = &self.op_assign;
         let op_assign_trait = &self.op_assign_trait;
-        let op_assign_fn = &self.op_assign_fn;
+        let op = &self.op;
+        let op_assign = &self.op_assign;
 
-        let struct_fields = match &ast.data {
-            syn::Data::Struct(data_struct) => &data_struct.fields,
-            _ => panic!("#[MathOp] only supports structs"),
-        };
-
-        let struct_field_idents: Vec<_> = match struct_fields {
-            syn::Fields::Named(named_fields) => named_fields
-                .named
-                .iter()
-                .map(|f| f.ident.clone().unwrap())
-                .collect(),
-            _ => panic!("#[MathOp] only supports structs with named fields"),
-        };
-
-        let mut generics = ast.generics.clone();
+        let mut generics = input.ast.generics.clone();
         let mut where_clause = generics.make_where_clause().clone();
         let predicates = &mut where_clause.predicates;
 
-        // TODO: Modify AST to derive automatically from Clone and Copy.
+        let (impl_generics, ty_generics, _) = generics.split_for_impl();
+        let struct_ident = input.ident;
+        let struct_ty: syn::Type = parse_quote! {#struct_ident #ty_generics};
+        let (rhs_ty, out_ty) = attr.unwrap(&struct_ty);
 
+        let is_ty_flat = |rhs_ty: &Type| {
+            if let syn::Type::Path(rhs_ty_path) = &rhs_ty {
+                let segment = rhs_ty_path.path.segments.first().unwrap();
+                return segment.arguments.is_empty();
+            }
+
+            false
+        };
+
+        let (op_fields, op_assign_fields): (Vec<_>, Vec<_>) = input
+            .fields_idents
+            .iter()
+            .map(|f| {
+                if is_ty_flat(&rhs_ty) {
+                    (
+                        quote! {#f: self.#f #op rhs},
+                        quote! {self.#f #op_assign rhs},
+                    )
+                } else {
+                    (
+                        quote! {#f: self.#f #op rhs.#f},
+                        quote! {self.#f #op_assign rhs.#f},
+                    )
+                }
+            })
+            .unzip();
+
+        // FIXME: Remove assign traits from op_impl and viceversa.
         for struct_generic_param in generics.params.iter() {
             if let syn::GenericParam::Type(ty) = struct_generic_param {
-                // FIXME: Remove op_assign_trait from op_trait and viceverse.
-                predicates.push(parse_quote! {
-                    #ty: Copy + Clone + #op_trait<Output = #ty> +
-                    #op_assign_trait
-                });
+                predicates.push(parse_quote! {#ty: Clone});
+                predicates.push(parse_quote! {#ty: Copy});
+                predicates.push(parse_quote! {#ty: #op_trait<Output = #ty>});
+                predicates.push(parse_quote! {#ty: #op_assign_trait});
             }
         }
 
-        // TODO: Split op and op_assign code generation into two functions.
-        let (impl_generics, ty_generics, _) = generics.split_for_impl();
-
-        let (op_fields, op_assign_fields): (Vec<_>, Vec<_>) =
-            struct_field_idents
-                .iter()
-                .map(|f| {
-                    if self.is_rhs_ty_flat {
-                        (
-                            quote! {#f: self.#f #op rhs},
-                            quote! {self.#f #op_assign rhs},
-                        )
-                    } else {
-                        (
-                            quote! {#f: self.#f #op rhs.#f},
-                            quote! {self.#f #op_assign rhs.#f},
-                        )
-                    }
-                })
-                .unzip();
-
-        let struct_ident = &ast.ident;
-        let struct_ty: syn::Type = parse_quote! {#struct_ident #ty_generics};
+        let op_fn = &self.op_fn;
+        let out_ident = match &out_ty {
+            Type::Path(out_ty_path) => {
+                &out_ty_path.path.segments.last().unwrap().ident
+            }
+            _ => panic!("failed to extract ident from out_ty"),
+        };
 
         let op_impl = quote! {
             impl #impl_generics #op_trait<#rhs_ty> for #struct_ty
             #where_clause {
-                type Output = #struct_ty;
+                type Output = #out_ty;
 
-                fn #op_fn(self, rhs: #rhs_ty) -> #struct_ty {
-                    Self {
+                fn #op_fn(self, rhs: #rhs_ty) -> #out_ty {
+                    #out_ident {
                        #(#op_fields),*
                     }
                 }
             }
         };
+
+        let op_assign_fn = &self.op_assign_fn;
 
         let op_assign_impl = quote! {
             impl #impl_generics #op_assign_trait<#rhs_ty> for #struct_ty
@@ -192,6 +250,8 @@ impl MathOp {
                 }
             }
         };
+
+        let ast = input.ast;
         let generated = quote! {#ast #op_impl #op_assign_impl};
 
         generated.into()

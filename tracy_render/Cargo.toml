@@ -1,0 +1,8 @@
+[package]
+name = "tracy_render"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tracy_math = { version = "0.1.0", path = "../tracy_math" }
+tracy_scene = { version = "0.1.0", path = "../tracy_scene" }

@@ -1,0 +1,11 @@
+[package]
+name = "tracy"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tracy_export = { version = "0.1.0", path = "../tracy_export" }
+tracy_import = { version = "0.1.0", path = "../tracy_import" }
+tracy_math = { version = "0.1.0", path = "../tracy_math" }
+tracy_render = { version = "0.1.0", path = "../tracy_render" }
+tracy_scene = { version = "0.1.0", path = "../tracy_scene" }

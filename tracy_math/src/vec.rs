@@ -12,6 +12,12 @@ pub struct Vec3D<T> {
     pub z: T,
 }
 
+impl<T> Vec3D<T> {
+    pub fn new(x: T, y: T, z: T) -> Self {
+        Self { x, y, z }
+    }
+}
+
 impl<T> Vec3D<T>
 where
     T: Copy + ops::Add<Output = T> + ops::Mul<Output = T>,

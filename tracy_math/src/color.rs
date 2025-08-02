@@ -9,6 +9,12 @@ pub struct ColorRGB<T> {
     pub b: T,
 }
 
+impl<T> ColorRGB<T> {
+    pub fn new(r: T, g: T, b: T) -> Self {
+        Self { r, g, b }
+    }
+}
+
 impl ColorRGB<f64> {
     pub fn to_u8(self) -> ColorRGB<u8> {
         ColorRGB {

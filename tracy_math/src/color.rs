@@ -9,14 +9,17 @@ pub struct ColorRGB<T> {
     pub b: T,
 }
 
-impl<T> ColorRGB<T> {
+impl<T> ColorRGB<T>
+where
+    T: num_traits::Num,
+{
     pub fn new(r: T, g: T, b: T) -> Self {
         Self { r, g, b }
     }
 }
 
 impl ColorRGB<f64> {
-    pub fn to_u8(self) -> ColorRGB<u8> {
+    pub fn scale(self) -> ColorRGB<u8> {
         ColorRGB {
             r: (self.r.clamp(0.0, 1.0) * 255.0) as u8,
             g: (self.g.clamp(0.0, 1.0) * 255.0) as u8,

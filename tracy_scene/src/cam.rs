@@ -60,7 +60,13 @@ impl Cam {
         }
     }
 
-    pub fn calc_px_center(&self, orig: Point2D<usize>) -> Point3D<f64> {
-        self.px_00 + (self.vw_du * orig.x as f64) + (self.vw_dv * orig.y as f64)
+    pub fn sample_px(
+        &self,
+        px_idx: Point2D<usize>,
+        offset: Point2D<f64>,
+    ) -> Point3D<f64> {
+        self.px_00
+            + (self.vw_du * (px_idx.x as f64 + offset.x as f64))
+            + (self.vw_dv * (px_idx.y as f64 + offset.y as f64))
     }
 }

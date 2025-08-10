@@ -21,14 +21,10 @@ impl Buf {
 
 pub struct Renderer {
     pub samples_per_px: usize,
+    pub depth: usize,
 }
 
 impl Renderer {
-    pub fn new() -> Self {
-        Self {
-            samples_per_px: 100,
-        }
-    }
     pub fn render(&self, scene: Scene) -> Buf {
         let cam = &scene.cam;
         let mut buf = Buf::new(cam.img_w, cam.img_h);
@@ -42,7 +38,7 @@ impl Renderer {
                     let offset = Point2D::random_range(0.0..1.0) - 0.5;
                     let px_sample = cam.sample_px(px_idx, offset);
                     let ray = Ray::new(cam.orig, px_sample - cam.orig);
-                    px += ray.trace(&scene.spheres);
+                    px += ray.trace(&scene.spheres, self.depth);
                 }
 
                 px *= 1.0 / self.samples_per_px as f64;

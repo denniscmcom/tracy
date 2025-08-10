@@ -34,11 +34,19 @@ impl Ray {
         self.orig + self.dir * t
     }
 
-    pub fn trace(&self, spheres: &Vec<Sphere<f64>>) -> ColorRGB<f64> {
+    pub fn trace(
+        &self,
+        spheres: &Vec<Sphere<f64>>,
+        depth: usize,
+    ) -> ColorRGB<f64> {
+        if depth == 0 {
+            return ColorRGB::new(0.0, 0.0, 0.0);
+        }
+
         let hit_data = spheres.hit(&self, &(0.0..f64::MAX));
 
         if let Some(hit_data) = hit_data {
-            // Handle one ray bounce.
+            // Bounce ray.
             loop {
                 let v = Vec3D::random_range(-1.0..1.0);
                 let v_len2: f64 = v.len_2();
@@ -51,7 +59,7 @@ impl Ray {
                     }
 
                     let r = Ray::new(hit_data.p, v_u);
-                    return r.trace(spheres) * 0.5;
+                    return r.trace(spheres, depth - 1) * 0.5;
                 }
             }
         }

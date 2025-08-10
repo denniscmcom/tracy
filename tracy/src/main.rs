@@ -15,7 +15,11 @@ fn run() {
     ];
 
     let scene = Scene::new(cam, spheres);
-    let renderer = Renderer::new();
+    let renderer = Renderer {
+        samples_per_px: 100,
+        depth: 50,
+    };
+
     let buf = renderer.render(scene);
     export(buf, "test").expect("export failed");
 }

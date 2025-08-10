@@ -1,4 +1,5 @@
 use std::ops::Range;
+use tracy_macros::Random;
 use tracy_math::{ColorRGB, Point3D, Vec3D};
 use tracy_scene::Sphere;
 
@@ -37,10 +38,22 @@ impl Ray {
         let hit_data = spheres.hit(&self, &(0.0..f64::MAX));
 
         if let Some(hit_data) = hit_data {
-            let norm = hit_data.out_norm;
-            let (r, g, b) = (norm.x + 1.0, norm.y + 1.0, norm.z + 1.0);
-            let color = ColorRGB::new(r, g, b);
-            return color * 0.5;
+            // Handle one ray bounce.
+            loop {
+                let v = Vec3D::random_range(-1.0..1.0);
+                let v_len2: f64 = v.len_2();
+
+                if 1e-160 < v_len2 && v_len2 <= 1.0 {
+                    let mut v_u = v / v_len2.sqrt();
+
+                    if v_u.dot(&hit_data.out_norm) < 0.0 {
+                        v_u *= -1.0;
+                    }
+
+                    let r = Ray::new(hit_data.p, v_u);
+                    return r.trace(spheres) * 0.5;
+                }
+            }
         }
 
         let dir_u = self.dir / self.dir.len_2().sqrt();

@@ -1,7 +1,7 @@
 mod ray;
 
 use crate::ray::Ray;
-use rand::prelude::*;
+use tracy_macros::Random;
 use tracy_math::{ColorRGB, Point2D};
 use tracy_scene::Scene;
 
@@ -32,7 +32,6 @@ impl Renderer {
     pub fn render(&self, scene: Scene) -> Buf {
         let cam = &scene.cam;
         let mut buf = Buf::new(cam.img_w, cam.img_h);
-        let mut rng = rand::rng();
 
         for y in 0..cam.img_h {
             for x in 0..cam.img_w {
@@ -40,11 +39,7 @@ impl Renderer {
 
                 for _ in 0..self.samples_per_px {
                     let px_idx = Point2D::new(x, y);
-                    let offset = Point2D {
-                        x: rng.random_range(0.0..1.0) - 0.5,
-                        y: rng.random_range(0.0..1.0) - 0.5,
-                    };
-
+                    let offset = Point2D::random_range(0.0..1.0) - 0.5;
                     let px_sample = cam.sample_px(px_idx, offset);
                     let ray = Ray::new(cam.orig, px_sample - cam.orig);
                     px += ray.trace(&scene.spheres);

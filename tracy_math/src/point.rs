@@ -1,13 +1,19 @@
 use crate::vec::Vec3D;
-use tracy_macros::{add, sub};
+use num_traits::Num;
+use rand::Rng;
+use tracy_macros::{Random, add, sub};
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Random)]
+#[sub(rhs = T)]
 pub struct Point2D<T> {
     pub x: T,
     pub y: T,
 }
 
-impl<T> Point2D<T> {
+impl<T> Point2D<T>
+where
+    T: Num,
+{
     pub fn new(x: T, y: T) -> Self {
         Self { x, y }
     }
@@ -23,7 +29,10 @@ pub struct Point3D<T> {
     pub z: T,
 }
 
-impl<T> Point3D<T> {
+impl<T> Point3D<T>
+where
+    T: Num,
+{
     pub fn new(x: T, y: T, z: T) -> Self {
         Self { x, y, z }
     }

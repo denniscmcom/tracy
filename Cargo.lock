@@ -146,6 +146,13 @@ version = "0.1.0"
 name = "tracy_macros"
 version = "0.1.0"
 dependencies = [
+ "tracy_macros_impl",
+]
+
+[[package]]
+name = "tracy_macros_impl"
+version = "0.1.0"
+dependencies = [
  "proc-macro2",
  "quote",
  "syn",
@@ -156,6 +163,7 @@ name = "tracy_math"
 version = "0.1.0"
 dependencies = [
  "num-traits",
+ "rand",
  "tracy_macros",
 ]
 
@@ -163,8 +171,7 @@ dependencies = [
 name = "tracy_render"
 version = "0.1.0"
 dependencies = [
- "num-traits",
- "rand",
+ "tracy_macros",
  "tracy_math",
  "tracy_scene",
 ]

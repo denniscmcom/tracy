@@ -43,7 +43,7 @@ impl Ray {
             return ColorRGB::new(0.0, 0.0, 0.0);
         }
 
-        let hit_data = spheres.hit(&self, &(0.0..f64::MAX));
+        let hit_data = spheres.hit(&self, &(0.001..f64::MAX));
 
         if let Some(hit_data) = hit_data {
             // Bounce ray.

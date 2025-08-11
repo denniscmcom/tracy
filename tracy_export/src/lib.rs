@@ -11,8 +11,8 @@ pub fn export(buf: Buf, filename: &str) -> std::io::Result<()> {
     let header = format!("P3\n{} {}\n255\n", cols, buf.rows);
     file.write_all(header.as_bytes())?;
 
-    for pixel in buf.px_data {
-        let line = format!("{} {} {}\n", pixel.r, pixel.g, pixel.b);
+    for px in buf.px_data {
+        let line = format!("{} {} {}\n", px.r, px.g, px.b);
         file.write_all(line.as_bytes())?;
     }
 

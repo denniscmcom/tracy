@@ -26,4 +26,12 @@ impl ColorRGB<f64> {
             b: (self.b.clamp(0.0, 1.0) * 255.0) as u8,
         }
     }
+
+    pub fn to_gamma(&self) -> ColorRGB<f64> {
+        Self {
+            r: f64::max(self.r, 0.0).sqrt(),
+            g: f64::max(self.g, 0.0).sqrt(),
+            b: f64::max(self.b, 0.0).sqrt(),
+        }
+    }
 }

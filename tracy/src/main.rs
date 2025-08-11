@@ -1,10 +1,13 @@
+use std::time;
 use tracy_export::export;
 use tracy_math::Point3D;
 use tracy_render::Renderer;
 use tracy_scene::{Cam, Scene, Sphere};
 
 fn main() {
+    let start = time::Instant::now();
     run();
+    println!("Elapsed: {:?}", start.elapsed());
 }
 
 fn run() {

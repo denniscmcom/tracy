@@ -42,7 +42,7 @@ impl Renderer {
                 }
 
                 px *= 1.0 / self.samples_per_px as f64;
-                buf.px_data.push(px.scale());
+                buf.px_data.push(px.to_gamma().scale());
             }
         }
 

@@ -53,12 +53,8 @@ impl Ray {
 
                 if 1e-160 < v_len2 && v_len2 <= 1.0 {
                     let mut v_u = v / v_len2.sqrt();
-
-                    if v_u.dot(&hit_data.out_norm) < 0.0 {
-                        v_u *= -1.0;
-                    }
-
-                    let r = Ray::new(hit_data.p, v_u);
+                    let dir = hit_data.out_norm + v_u;
+                    let r = Ray::new(hit_data.p, dir);
                     return r.trace(spheres, depth - 1) * 0.5;
                 }
             }

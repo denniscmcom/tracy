@@ -1,6 +1,6 @@
 use tracy_macros::Random;
 use tracy_math::{ColorRGB, Point2D, Ray};
-use tracy_scene::{Geo, Mat, Scene};
+use tracy_scene::{Geo, Scene};
 
 pub struct Buf {
     pub px_data: Vec<ColorRGB<u8>>,
@@ -56,8 +56,9 @@ impl Renderer {
 
         if let Some(hit) = hit {
             loop {
-                let scattered_ray = hit.mat.scatter(ray, hit.norm, hit.orig);
-                return self.trace(scattered_ray, geo) * 0.5;
+                let scatter_data = hit.mat.scatter(ray, hit.norm, hit.orig);
+                return self.trace(scatter_data.ray, geo)
+                    * scatter_data.attenuation;
             }
         }
 

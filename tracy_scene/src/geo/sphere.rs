@@ -2,35 +2,14 @@ use crate::{geo, geo::Geo, mat::Mat};
 use std::{ops::Range, rc::Rc};
 use tracy_math::{Point3D, Ray};
 
-pub struct Sphere<T>
-where
-    T: Mat,
-{
+pub struct Sphere {
     pub orig: Point3D,
     pub r: f64,
-    pub mat: Rc<T>,
+    pub mat: Rc<dyn Mat>,
 }
 
-impl<T> Sphere<T>
-where
-    T: Mat,
-{
-    pub fn new(orig: Point3D, r: f64, mat: T) -> Self {
-        Self {
-            orig,
-            r,
-            mat: Rc::new(mat),
-        }
-    }
-}
-
-impl<T> Geo for Sphere<T>
-where
-    T: Mat,
-{
-    type MatTy = T;
-
-    fn hit(&self, ray: &Ray, range: &Range<f64>) -> Option<geo::Hit<T>> {
+impl Geo for Sphere {
+    fn hit(&self, ray: &Ray, range: &Range<f64>) -> Option<geo::Hit> {
         let oc = self.orig - ray.orig;
         let a = ray.dir.len_2();
         let h = ray.dir.dot(&oc);
@@ -66,13 +45,8 @@ where
     }
 }
 
-impl<T> Geo for Vec<Sphere<T>>
-where
-    T: Mat,
-{
-    type MatTy = T;
-
-    fn hit(&self, ray: &Ray, range: &Range<f64>) -> Option<geo::Hit<T>> {
+impl Geo for Vec<Sphere> {
+    fn hit(&self, ray: &Ray, range: &Range<f64>) -> Option<geo::Hit> {
         let mut hits = Vec::new();
         let mut closest = range.end;
 

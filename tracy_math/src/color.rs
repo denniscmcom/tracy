@@ -3,6 +3,7 @@ use tracy_macros::{add, mul};
 
 #[derive(Clone, Copy, Default)]
 #[add]
+#[mul]
 #[mul(rhs = T)]
 pub struct ColorRGB<T> {
     pub r: T,

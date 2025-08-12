@@ -180,6 +180,8 @@ dependencies = [
 name = "tracy_scene"
 version = "0.1.0"
 dependencies = [
+ "num-traits",
+ "tracy_macros",
  "tracy_math",
 ]
 

@@ -1,9 +1,6 @@
-mod ray;
-
-use crate::ray::Ray;
 use tracy_macros::Random;
-use tracy_math::{ColorRGB, Point2D};
-use tracy_scene::Scene;
+use tracy_math::{ColorRGB, Point2D, Ray};
+use tracy_scene::{Geo, Mat, Scene};
 
 pub struct Buf {
     pub px_data: Vec<ColorRGB<u8>>,
@@ -25,7 +22,7 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    pub fn render(&self, scene: Scene) -> Buf {
+    pub fn render<T: Geo>(&self, scene: Scene<T>) -> Buf {
         let cam = &scene.cam;
         let mut buf = Buf::new(cam.img_w, cam.img_h);
 
@@ -34,11 +31,12 @@ impl Renderer {
                 let mut px = ColorRGB::new(0.0, 0.0, 0.0);
 
                 for _ in 0..self.samples_per_px {
-                    let px_idx = Point2D::new(x, y);
+                    let px_idx = Point2D::new(x as f64, y as f64);
                     let offset = Point2D::random_range(0.0..1.0) - 0.5;
                     let px_sample = cam.sample_px(px_idx, offset);
-                    let ray = Ray::new(cam.orig, px_sample - cam.orig);
-                    px += ray.trace(&scene.spheres, self.depth);
+                    let ray_dir = px_sample - cam.orig;
+                    let ray = Ray::new(cam.orig, ray_dir, self.depth);
+                    px += self.trace(ray, &scene.geo);
                 }
 
                 px *= 1.0 / self.samples_per_px as f64;
@@ -47,5 +45,27 @@ impl Renderer {
         }
 
         buf
+    }
+
+    fn trace<T: Geo>(&self, ray: Ray, geo: &T) -> ColorRGB<f64> {
+        if ray.depth == 0 {
+            return ColorRGB::new(0.0, 0.0, 0.0);
+        }
+
+        let hit = geo.hit(&ray, &(0.001..f64::MAX));
+
+        if let Some(hit) = hit {
+            loop {
+                let scattered_ray = hit.mat.scatter(ray, hit.norm, hit.orig);
+                return self.trace(scattered_ray, geo) * 0.5;
+            }
+        }
+
+        // Gradient background.
+        let dir_u = ray.dir / ray.dir.len_2().sqrt();
+        let a = 0.5 * (dir_u.y + 0.5);
+        let start_color = ColorRGB::new(1.0, 1.0, 1.0);
+        let end_color = ColorRGB::new(0.5, 0.7, 1.0);
+        start_color * (1.0 - a) + end_color * a
     }
 }

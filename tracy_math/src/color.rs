@@ -1,3 +1,4 @@
+use num_traits::Num;
 use tracy_macros::{add, mul};
 
 #[derive(Clone, Copy, Default)]
@@ -11,7 +12,7 @@ pub struct ColorRGB<T> {
 
 impl<T> ColorRGB<T>
 where
-    T: num_traits::Num,
+    T: Num,
 {
     pub fn new(r: T, g: T, b: T) -> Self {
         Self { r, g, b }

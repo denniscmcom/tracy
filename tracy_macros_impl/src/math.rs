@@ -150,10 +150,28 @@ impl MathOp {
         let struct_ty: syn::Type = parse_quote! {#struct_ident #ty_generics};
         let (rhs_ty, out_ty) = attr.unwrap(&struct_ty);
 
-        let is_ty_flat = |rhs_ty: &Type| {
-            if let syn::Type::Path(rhs_ty_path) = &rhs_ty {
-                let segment = rhs_ty_path.path.segments.first().unwrap();
-                return segment.arguments.is_empty();
+        let is_scalar_ty = |ty: &Type| {
+            if let syn::Type::Path(ty_path) = ty {
+                if let Some(segment) = ty_path.path.segments.first() {
+                    let ident_str = segment.ident.to_string();
+                    // TODO: Improve this (remove harcoded T).
+                    if ident_str == "T" {
+                        return true;
+                    }
+
+                    return ident_str == "f32"
+                        || ident_str == "f64"
+                        || ident_str == "u8"
+                        || ident_str == "u16"
+                        || ident_str == "u32"
+                        || ident_str == "u64"
+                        || ident_str == "usize"
+                        || ident_str == "i8"
+                        || ident_str == "i16"
+                        || ident_str == "i32"
+                        || ident_str == "i64"
+                        || ident_str == "isize";
+                }
             }
 
             false
@@ -163,7 +181,7 @@ impl MathOp {
             .fields_idents
             .iter()
             .map(|f| {
-                if is_ty_flat(&rhs_ty) {
+                if is_scalar_ty(&rhs_ty) {
                     (
                         quote! {#f: self.#f #op rhs},
                         quote! {self.#f #op_assign rhs},

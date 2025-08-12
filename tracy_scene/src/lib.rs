@@ -1,17 +1,9 @@
-mod cam;
-mod scene;
-mod sphere;
+pub mod cam;
+pub mod geo;
+pub mod mat;
+pub mod scene;
 
 pub use cam::Cam;
+pub use geo::Geo;
+pub use mat::Mat;
 pub use scene::Scene;
-pub use sphere::Sphere;
-
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-
-//     #[test]
-//     fn it_works() {
-//         assert_eq!(1, 4);
-//     }
-// }

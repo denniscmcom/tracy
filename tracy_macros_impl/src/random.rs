@@ -35,17 +35,28 @@ pub fn impl_random_macro(input: Input) -> TokenStream {
         .unzip();
 
     let struct_ident = input.ident;
-    let struct_ty: syn::Type = parse_quote! {#struct_ident #ty_generics};
+    let struct_ty = quote! {#struct_ident #ty_generics};
+    let ty = if generics.params.is_empty() {
+        quote! {f64}
+    } else {
+        quote! {#ty_generics}
+    };
+
+    let trait_ty = quote! {Random<#ty>};
+
     let random_impl = quote! {
-        impl #impl_generics Random #ty_generics for #struct_ty #where_clause {
+        impl #impl_generics #trait_ty for #struct_ty #where_clause {
+
             fn random() -> Self {
+                use rand::Rng;
                 let mut rng = rand::rng();
                 Self {
                     #(#fields),*
                 }
             }
 
-            fn random_range(r: std::ops::Range #ty_generics) -> Self {
+            fn random_range(r: std::ops::Range<#ty>) -> Self {
+                use rand::Rng;
                 let mut rng = rand::rng();
                 Self {
                     #(#range_fields),*

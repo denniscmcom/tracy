@@ -1,12 +1,18 @@
-use crate::{Cam, Sphere};
+use crate::{cam::Cam, geo::Geo};
 
-pub struct Scene {
+pub struct Scene<T>
+where
+    T: Geo,
+{
     pub cam: Cam,
-    pub spheres: Vec<Sphere<f64>>,
+    pub geo: T,
 }
 
-impl Scene {
-    pub fn new(cam: Cam, spheres: Vec<Sphere<f64>>) -> Self {
-        Self { cam, spheres }
+impl<T> Scene<T>
+where
+    T: Geo,
+{
+    pub fn new(cam: Cam, geo: T) -> Self {
+        Self { cam, geo }
     }
 }

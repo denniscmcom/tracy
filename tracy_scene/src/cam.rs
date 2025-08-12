@@ -21,12 +21,12 @@ use tracy_math::{Point2D, Point3D, Vec3D};
 ///  ─────────────────────────► vw_u      
 /// ```       
 pub struct Cam {
-    pub orig: Point3D<f64>,
+    pub orig: Point3D,
     pub img_w: usize,
     pub img_h: usize,
-    vw_du: Vec3D<f64>,
-    vw_dv: Vec3D<f64>,
-    px_00: Point3D<f64>,
+    vw_du: Vec3D,
+    vw_dv: Vec3D,
+    px_00: Point3D,
 }
 
 impl Cam {
@@ -60,11 +60,7 @@ impl Cam {
         }
     }
 
-    pub fn sample_px(
-        &self,
-        px_idx: Point2D<usize>,
-        offset: Point2D<f64>,
-    ) -> Point3D<f64> {
+    pub fn sample_px(&self, px_idx: Point2D, offset: Point2D) -> Point3D {
         self.px_00
             + (self.vw_du * (px_idx.x as f64 + offset.x as f64))
             + (self.vw_dv * (px_idx.y as f64 + offset.y as f64))

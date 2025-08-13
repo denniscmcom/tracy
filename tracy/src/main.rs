@@ -32,6 +32,7 @@ fn run() {
             r: 0.5,
             mat: Rc::new(mat::Metal {
                 albedo: ColorRGB::new(0.8, 0.8, 0.8),
+                fuzz: 0.0,
             }),
         },
         Sphere {
@@ -39,14 +40,15 @@ fn run() {
             r: 0.5,
             mat: Rc::new(mat::Metal {
                 albedo: ColorRGB::new(0.8, 0.6, 0.2),
+                fuzz: 0.3,
             }),
         },
     ];
 
     let scene = Scene::new(cam, spheres);
     let renderer = Renderer {
-        samples_per_px: 100,
-        depth: 50,
+        samples_per_px: 50,
+        depth: 10,
     };
 
     let buf = renderer.render(scene);

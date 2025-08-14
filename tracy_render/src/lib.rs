@@ -52,19 +52,20 @@ impl Renderer {
             return ColorRGB::new(0.0, 0.0, 0.0);
         }
 
-        let hit = geo.hit(&ray, &(0.001..f64::MAX));
-
-        if let Some(hit) = hit {
+        if let Some((hit, mat)) = geo.hit(&ray, &(0.001..f64::MAX)) {
             loop {
-                let scatter_data = hit.mat.scatter(ray, hit.norm, hit.orig);
-                return self.trace(scatter_data.ray, geo)
-                    * scatter_data.attenuation;
+                if let Some(scatter_data) = mat.scatter(ray, hit) {
+                    return self.trace(scatter_data.ray, geo)
+                        * scatter_data.attenuation;
+                }
+
+                return ColorRGB::new(0.0, 0.0, 0.0);
             }
         }
 
         // Gradient background.
         let dir_u = ray.dir / ray.dir.len_2().sqrt();
-        let a = 0.5 * (dir_u.y + 0.5);
+        let a = 0.5 * (dir_u.y + 1.0);
         let start_color = ColorRGB::new(1.0, 1.0, 1.0);
         let end_color = ColorRGB::new(0.5, 0.7, 1.0);
         start_color * (1.0 - a) + end_color * a

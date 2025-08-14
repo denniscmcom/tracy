@@ -1,4 +1,7 @@
-use crate::{geo, geo::Geo, mat::Mat};
+use crate::{
+    geo::{Face, Geo, Hit},
+    mat::Mat,
+};
 use std::{ops::Range, rc::Rc};
 use tracy_math::{Point3D, Ray};
 
@@ -9,7 +12,7 @@ pub struct Sphere {
 }
 
 impl Geo for Sphere {
-    fn hit(&self, ray: &Ray, range: &Range<f64>) -> Option<geo::Hit> {
+    fn hit(&self, ray: &Ray, range: &Range<f64>) -> Option<(Hit, Rc<dyn Mat>)> {
         let oc = self.orig - ray.orig;
         let a = ray.dir.len_2();
         let h = ray.dir.dot(&oc);
@@ -21,43 +24,49 @@ impl Geo for Sphere {
         };
 
         let sqrtd = discriminant.sqrt();
-        let root = (h - sqrtd) / a;
+        let mut root = (h - sqrtd) / a;
 
         if !range.contains(&root) {
-            return None;
-        };
+            root = (h + sqrtd) / a;
+
+            if !range.contains(&root) {
+                return None;
+            }
+        }
 
         let orig = ray.at(root);
         let norm = (orig - self.orig) / self.r;
-        let (out_norm, face) = if ray.dir.dot(&norm) < 0.0 {
-            (norm, geo::Face::Front)
+        let (out_norm, face) = if ray.dir.dot(&norm) <= 0.0 {
+            (norm, Face::Front)
         } else {
-            (norm * -1.0, geo::Face::Back)
+            (norm * -1.0, Face::Back)
         };
 
-        Some(geo::Hit {
+        let hit = Hit {
             norm: out_norm,
             orig,
             ray_t: root,
             face,
-            mat: Rc::clone(&self.mat),
-        })
+        };
+
+        Some((hit, Rc::clone(&self.mat)))
     }
 }
 
 impl Geo for Vec<Sphere> {
-    fn hit(&self, ray: &Ray, range: &Range<f64>) -> Option<geo::Hit> {
+    fn hit(&self, ray: &Ray, range: &Range<f64>) -> Option<(Hit, Rc<dyn Mat>)> {
         let mut hits = Vec::new();
         let mut closest = range.end;
 
         for sphere in self {
-            if let Some(hit_data) = sphere.hit(ray, &(range.start..closest)) {
-                closest = hit_data.ray_t;
-                hits.push(hit_data);
+            let ray_range = range.start..(closest + 1.0);
+            if let Some((hit, mat)) = sphere.hit(ray, &ray_range) {
+                closest = hit.ray_t;
+                hits.push((hit, mat));
             }
         }
 
         hits.into_iter()
-            .min_by(|a, b| a.ray_t.partial_cmp(&b.ray_t).unwrap())
+            .min_by(|a, b| a.0.ray_t.partial_cmp(&b.0.ray_t).unwrap())
     }
 }

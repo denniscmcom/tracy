@@ -7,7 +7,7 @@ use std::{ops::Range, rc::Rc};
 use tracy_math::{Point3D, Ray, Vec3D};
 
 pub trait Geo {
-    fn hit(&self, ray: &Ray, range: &Range<f64>) -> Option<Hit>;
+    fn hit(&self, ray: &Ray, range: &Range<f64>) -> Option<(Hit, Rc<dyn Mat>)>;
 }
 
 pub enum Face {
@@ -20,5 +20,4 @@ pub struct Hit {
     pub orig: Point3D,
     pub ray_t: f64,
     pub face: Face,
-    pub mat: Rc<dyn Mat>,
 }

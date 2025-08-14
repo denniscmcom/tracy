@@ -30,17 +30,14 @@ fn run() {
         Sphere {
             orig: Point3D::new(-1.0, 0.0, -1.0),
             r: 0.5,
-            mat: Rc::new(mat::Metal {
-                albedo: ColorRGB::new(0.8, 0.8, 0.8),
-                fuzz: 0.0,
-            }),
+            mat: Rc::new(mat::Dielectric { refract_idx: 1.5 }),
         },
         Sphere {
             orig: Point3D::new(1.0, 0.0, -1.0),
             r: 0.5,
             mat: Rc::new(mat::Metal {
                 albedo: ColorRGB::new(0.8, 0.6, 0.2),
-                fuzz: 0.3,
+                fuzz: 1.0,
             }),
         },
     ];

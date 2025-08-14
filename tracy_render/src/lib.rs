@@ -52,7 +52,7 @@ impl Renderer {
             return ColorRGB::new(0.0, 0.0, 0.0);
         }
 
-        if let Some((hit, mat)) = geo.hit(&ray, &(0.001..f64::MAX)) {
+        if let Some((hit, mat)) = geo.hit(&ray, &(0.001..=f64::MAX)) {
             loop {
                 if let Some(scatter_data) = mat.scatter(ray, hit) {
                     return self.trace(scatter_data.ray, geo)

@@ -2,7 +2,7 @@ use crate::{
     geo::{Face, Geo, Hit},
     mat::Mat,
 };
-use std::{ops::Range, rc::Rc};
+use std::{ops::RangeInclusive, rc::Rc};
 use tracy_math::{Point3D, Ray};
 
 pub struct Sphere {
@@ -12,7 +12,11 @@ pub struct Sphere {
 }
 
 impl Geo for Sphere {
-    fn hit(&self, ray: &Ray, range: &Range<f64>) -> Option<(Hit, Rc<dyn Mat>)> {
+    fn hit(
+        &self,
+        ray: &Ray,
+        range: &RangeInclusive<f64>,
+    ) -> Option<(Hit, Rc<dyn Mat>)> {
         let oc = self.orig - ray.orig;
         let a = ray.dir.len_2();
         let h = ray.dir.dot(&oc);
@@ -54,12 +58,16 @@ impl Geo for Sphere {
 }
 
 impl Geo for Vec<Sphere> {
-    fn hit(&self, ray: &Ray, range: &Range<f64>) -> Option<(Hit, Rc<dyn Mat>)> {
+    fn hit(
+        &self,
+        ray: &Ray,
+        range: &RangeInclusive<f64>,
+    ) -> Option<(Hit, Rc<dyn Mat>)> {
         let mut hits = Vec::new();
-        let mut closest = range.end;
+        let mut closest = *range.end();
 
         for sphere in self {
-            let ray_range = range.start..(closest + 1.0);
+            let ray_range = *range.start()..=closest;
             if let Some((hit, mat)) = sphere.hit(ray, &ray_range) {
                 closest = hit.ray_t;
                 hits.push((hit, mat));

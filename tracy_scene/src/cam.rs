@@ -30,12 +30,15 @@ pub struct Cam {
 }
 
 impl Cam {
-    pub fn new(img_w: usize) -> Self {
+    pub fn new(img_w: usize, fov: Degrees) -> Self {
         let ideal_aspect_ratio = 16.0 / 9.0;
         let img_h = (img_w as f64 / ideal_aspect_ratio) as usize;
         let actual_aspect_ratio = img_w as f64 / img_h as f64;
 
-        let vw_h = 2.0;
+        let focal_len = 1.0;
+        let theta = f64::to_radians(fov.0);
+        let h = f64::tan(theta / 2.0);
+        let vw_h = 2.0 * h * focal_len;
         let vw_w = vw_h * actual_aspect_ratio;
 
         let vw_u = Vec3D::new(vw_w, 0.0, 0.0);
@@ -45,7 +48,7 @@ impl Cam {
         let vw_dv = vw_v / img_h as f64;
 
         let orig = Point3D::new(0.0, 0.0, 0.0);
-        let focal_len = 1.0;
+
         let focal_len_v = Vec3D::new(0.0, 0.0, focal_len);
         let vw_orig = orig - focal_len_v - vw_u / 2.0 - vw_v / 2.0;
         let px_00 = vw_orig + (vw_du + vw_dv) * 0.5;
@@ -66,3 +69,5 @@ impl Cam {
             + (self.vw_dv * (px_idx.y as f64 + offset.y as f64))
     }
 }
+
+pub struct Degrees(pub f64);

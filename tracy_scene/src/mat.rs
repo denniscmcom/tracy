@@ -1,4 +1,5 @@
 use crate::geo::{Face, Hit};
+use rand::Rng;
 use tracy_macros::Random;
 use tracy_math::{ColorRGB, Ray, Vec3D};
 
@@ -68,8 +69,12 @@ impl Mat for Dielectric {
         let ray_dir_u = ray.dir / ray.dir.len_2().sqrt();
         let cos_theta = f64::min(-ray_dir_u.dot(&hit.norm), 1.0);
         let sin_theta = f64::sqrt(1.0 - cos_theta * cos_theta);
+        let is_reflected = ri * sin_theta > 1.0;
+        let reflectance = self.comp_reflectance(cos_theta);
+        let mut rng = rand::rng();
+        let rand_f64 = rng.random_range(0.0..1.0);
 
-        let dir = if ri * sin_theta > 1.0 {
+        let dir = if is_reflected || reflectance > rand_f64 {
             reflect(&ray_dir_u, &hit.norm)
         } else {
             refract(&ray_dir_u, &hit.norm, ri)
@@ -79,6 +84,14 @@ impl Mat for Dielectric {
             ray: Ray::new(hit.orig, dir, ray.depth - 1),
             attenuation: ColorRGB::new(1.0, 1.0, 1.0),
         })
+    }
+}
+
+impl Dielectric {
+    fn comp_reflectance(&self, cos: f64) -> f64 {
+        let mut r0 = (1.0 - self.refract_idx) / (1.0 + self.refract_idx);
+        r0 = r0 * r0;
+        r0 + (1.0 - r0) * (1.0 - cos).powf(5.0)
     }
 }
 

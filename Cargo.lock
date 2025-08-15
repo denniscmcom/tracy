@@ -181,6 +181,7 @@ name = "tracy_scene"
 version = "0.1.0"
 dependencies = [
  "num-traits",
+ "rand",
  "tracy_macros",
  "tracy_math",
 ]

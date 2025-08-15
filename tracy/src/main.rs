@@ -30,8 +30,13 @@ fn run() {
         Sphere {
             orig: Point3D::new(-1.0, 0.0, -1.0),
             r: 0.5,
+            mat: Rc::new(mat::Dielectric { refract_idx: 1.5 }),
+        },
+        Sphere {
+            orig: Point3D::new(-1.0, 0.0, -1.0),
+            r: 0.4,
             mat: Rc::new(mat::Dielectric {
-                refract_idx: 1.0 / 1.33,
+                refract_idx: 1.0 / 1.5,
             }),
         },
         Sphere {
@@ -47,7 +52,7 @@ fn run() {
     let scene = Scene::new(cam, spheres);
     let renderer = Renderer {
         samples_per_px: 50,
-        depth: 10,
+        depth: 12,
     };
 
     let buf = renderer.render(scene);

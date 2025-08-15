@@ -39,16 +39,16 @@ pub struct Metal {
 
 impl Mat for Metal {
     fn scatter(&self, ray: Ray, hit: Hit) -> Option<ScatterData> {
-        let dir = ray.dir - hit.norm * ray.dir.dot(&hit.norm) * 2.0;
+        let mut dir = reflect(&ray.dir, &hit.norm);
         let dir_u = dir / dir.len_2().sqrt();
-        let reflected_dir = dir_u + (random_vec_u() * self.fuzz);
+        dir = dir_u + (random_vec_u() * self.fuzz);
 
-        if reflected_dir.dot(&hit.norm) <= 0.0 {
+        if dir.dot(&hit.norm) <= 0.0 {
             return None;
         }
 
         Some(ScatterData {
-            ray: Ray::new(hit.orig, reflected_dir, ray.depth - 1),
+            ray: Ray::new(hit.orig, dir, ray.depth - 1),
             attenuation: self.albedo,
         })
     }
@@ -65,16 +65,18 @@ impl Mat for Dielectric {
             Face::Back => self.refract_idx,
         };
 
-        let dir_u = ray.dir / ray.dir.len_2().sqrt();
-        let n_dir_u = dir_u * -1.0;
-        let cos_theta = f64::min(n_dir_u.dot(&hit.norm), 1.0);
-        let r_out_perp = (dir_u + hit.norm * cos_theta) * ri;
-        let r_out_parallel =
-            hit.norm * -f64::sqrt(f64::abs(1.0 - r_out_perp.len_2()));
+        let ray_dir_u = ray.dir / ray.dir.len_2().sqrt();
+        let cos_theta = f64::min(-ray_dir_u.dot(&hit.norm), 1.0);
+        let sin_theta = f64::sqrt(1.0 - cos_theta * cos_theta);
 
-        let refracted_dir = r_out_perp + r_out_parallel;
+        let dir = if ri * sin_theta > 1.0 {
+            reflect(&ray_dir_u, &hit.norm)
+        } else {
+            refract(&ray_dir_u, &hit.norm, ri)
+        };
+
         Some(ScatterData {
-            ray: Ray::new(hit.orig, refracted_dir, ray.depth - 1),
+            ray: Ray::new(hit.orig, dir, ray.depth - 1),
             attenuation: ColorRGB::new(1.0, 1.0, 1.0),
         })
     }
@@ -90,4 +92,15 @@ fn random_vec_u() -> Vec3D {
             return v / v_len2.sqrt();
         }
     }
+}
+
+fn reflect(v: &Vec3D, norm: &Vec3D) -> Vec3D {
+    *v - *norm * v.dot(&norm) * 2.0
+}
+
+fn refract(v_u: &Vec3D, norm: &Vec3D, etai_over_etat: f64) -> Vec3D {
+    let cos_theta = f64::min(-v_u.dot(&norm), 1.0);
+    let r_out_perp = (*v_u + *norm * cos_theta) * etai_over_etat;
+    let r_out_parallel = *norm * -f64::sqrt(f64::abs(1.0 - r_out_perp.len_2()));
+    r_out_perp + r_out_parallel
 }

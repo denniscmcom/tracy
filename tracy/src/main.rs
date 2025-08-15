@@ -30,7 +30,9 @@ fn run() {
         Sphere {
             orig: Point3D::new(-1.0, 0.0, -1.0),
             r: 0.5,
-            mat: Rc::new(mat::Dielectric { refract_idx: 1.5 }),
+            mat: Rc::new(mat::Dielectric {
+                refract_idx: 1.0 / 1.33,
+            }),
         },
         Sphere {
             orig: Point3D::new(1.0, 0.0, -1.0),

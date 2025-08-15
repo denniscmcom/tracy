@@ -35,22 +35,28 @@ impl Cam {
         let img_h = (img_w as f64 / ideal_aspect_ratio) as usize;
         let actual_aspect_ratio = img_w as f64 / img_h as f64;
 
-        let focal_len = 1.0;
+        let orig = Point3D::new(-2.0, 2.0, 1.0);
+        let at = Point3D::new(0.0, 0.0, -1.0);
+        let up = Vec3D::new(0.0, 1.0, 0.0);
+        let view = orig - at;
+
+        let focal_len = (orig - at).len_2().sqrt();
         let theta = f64::to_radians(fov.0);
         let h = f64::tan(theta / 2.0);
         let vw_h = 2.0 * h * focal_len;
         let vw_w = vw_h * actual_aspect_ratio;
 
-        let vw_u = Vec3D::new(vw_w, 0.0, 0.0);
-        let vw_v = Vec3D::new(0.0, -vw_h, 0.0);
+        let w = view.normalize();
+        let u = up.cross(&w).normalize();
+        let v = w.cross(&u);
+
+        let vw_u = u * vw_w;
+        let vw_v = -v * vw_h;
 
         let vw_du = vw_u / img_w as f64;
         let vw_dv = vw_v / img_h as f64;
 
-        let orig = Point3D::new(0.0, 0.0, 0.0);
-
-        let focal_len_v = Vec3D::new(0.0, 0.0, focal_len);
-        let vw_orig = orig - focal_len_v - vw_u / 2.0 - vw_v / 2.0;
+        let vw_orig = orig - (w * focal_len) - vw_u / 2.0 - vw_v / 2.0;
         let px_00 = vw_orig + (vw_du + vw_dv) * 0.5;
 
         Self {

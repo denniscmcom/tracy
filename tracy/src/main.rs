@@ -1,8 +1,8 @@
 use std::{rc::Rc, time};
 use tracy_export::export;
-use tracy_math::{ColorRGB, Point3D};
+use tracy_math::{ColorRGB, Point3D, Vec3D, unit::Degrees};
 use tracy_render::Renderer;
-use tracy_scene::{Cam, Scene, cam, geo::Sphere, mat};
+use tracy_scene::{Scene, cam::CamBuilder, geo::Sphere, mat};
 
 fn main() {
     let start = time::Instant::now();
@@ -11,7 +11,16 @@ fn main() {
 }
 
 fn run() {
-    let cam = Cam::new(400, cam::Degrees(90.0));
+    let cam_builder = CamBuilder {
+        orig: Point3D::new(-2.0, 2.0, 1.0),
+        at: Point3D::new(0.0, 0.0, -1.0),
+        up: Vec3D::new(0.0, 1.0, 0.0),
+        img_w: 400,
+        fov: Degrees::new(90.0),
+    };
+
+    let cam = cam_builder.build();
+
     let spheres = vec![
         Sphere {
             orig: Point3D::new(0.0, -100.5, -1.0),

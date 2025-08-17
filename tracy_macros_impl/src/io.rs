@@ -1,36 +1,38 @@
 use syn::{
-    DeriveInput, Ident,
+    Data, DeriveInput, Fields, Ident, Member,
     parse::{Parse, ParseStream},
 };
 
-pub struct Input {
+pub struct StructInput {
     pub ast: DeriveInput,
     pub ident: Ident,
-    pub fields_idents: Vec<Ident>,
+    pub fields: Vec<Member>,
 }
 
-impl Parse for Input {
+impl Parse for StructInput {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let ast: DeriveInput = input.parse()?;
         let ident = ast.ident.clone();
-        let fields = match &ast.data {
-            syn::Data::Struct(data_struct) => &data_struct.fields,
-            _ => panic!("Macro only supports structs"),
+
+        let fields: Vec<Member> = if let Data::Struct(data_struct) = &ast.data {
+            match &data_struct.fields {
+                Fields::Named(fields_named) => fields_named
+                    .named
+                    .iter()
+                    .map(|f| Member::Named(f.ident.clone().unwrap()))
+                    .collect(),
+                Fields::Unnamed(fields_unnamed) => fields_unnamed
+                    .unnamed
+                    .iter()
+                    .enumerate()
+                    .map(|(i, _f)| Member::Unnamed(syn::Index::from(i)))
+                    .collect(),
+                Fields::Unit => panic!("unit struct is not supported"),
+            }
+        } else {
+            panic!("type is not a struct");
         };
 
-        let fields_idents: Vec<_> = match fields {
-            syn::Fields::Named(named_fields) => named_fields
-                .named
-                .iter()
-                .map(|f| f.ident.clone().unwrap())
-                .collect(),
-            _ => panic!("Macro only supports structs with named fields"),
-        };
-
-        Ok(Self {
-            ast,
-            ident,
-            fields_idents,
-        })
+        Ok(Self { ast, ident, fields })
     }
 }

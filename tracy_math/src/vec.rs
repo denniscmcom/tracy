@@ -1,4 +1,3 @@
-use std::ops::Neg;
 use tracy_macros::{Random, add, div, mul, sub};
 
 #[derive(Clone, Copy, Default, Random)]
@@ -39,7 +38,7 @@ impl Vec3D {
     }
 }
 
-impl Neg for Vec3D {
+impl std::ops::Neg for Vec3D {
     type Output = Vec3D;
 
     fn neg(self) -> Self::Output {

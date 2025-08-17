@@ -1,9 +1,9 @@
-use crate::io::Input;
+use crate::io::StructInput;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::parse_quote;
 
-pub fn impl_random_macro(input: Input) -> TokenStream {
+pub fn impl_random_macro(input: StructInput) -> TokenStream {
     let mut generics = input.ast.generics.clone();
     let mut where_clause = generics.make_where_clause().clone();
     let predicates = &mut where_clause.predicates;
@@ -24,7 +24,7 @@ pub fn impl_random_macro(input: Input) -> TokenStream {
 
     let (impl_generics, ty_generics, _) = generics.split_for_impl();
     let (fields, range_fields): (Vec<_>, Vec<_>) = input
-        .fields_idents
+        .fields
         .iter()
         .map(|f| {
             (

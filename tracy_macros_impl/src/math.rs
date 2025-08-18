@@ -200,10 +200,10 @@ impl MathOp {
         let build_op_lhs = |lhs_ty: &Type| -> TokenStream2 {
             let fields = input.fields.iter().map(|f| {
                 if self.is_scalar(&lhs_ty) {
-                    return quote! {#f: self.clone() #op rhs.#f};
+                    return quote! {#f: rhs.#f #op self.clone()};
                 }
 
-                quote! {#f: self.#f #op rhs.#f}
+                quote! {#f: rhs.#f #op self.#f}
             });
 
             quote! {

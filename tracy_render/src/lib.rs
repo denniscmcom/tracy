@@ -1,5 +1,5 @@
 use tracy_macros::Random;
-use tracy_math::{ColorRGB, Point2D, Ray};
+use tracy_math::{ColorRGB, Point2D, Ray, Vec2D};
 use tracy_scene::{Geo, Scene};
 
 pub struct Buf {
@@ -32,7 +32,9 @@ impl Renderer {
 
                 for _ in 0..self.samples_per_px {
                     let px_idx = Point2D::new(x as f64, y as f64);
-                    let offset = Point2D::random_range(0.0..1.0) - 0.5;
+                    let offset =
+                        Point2D::random_range(0.0..1.0) - Vec2D::new(0.5, 0.5);
+
                     let px_sample = cam.sample_px(px_idx, offset);
                     let ray_dir = px_sample - cam.orig;
                     let ray = Ray::new(cam.orig, ray_dir, self.depth);

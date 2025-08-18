@@ -20,7 +20,6 @@ impl Point3D {
 #[derive(Clone, Copy, Default, Random)]
 #[add(rhs = Vec2D, lhs = Vec2D)]
 #[sub(rhs = Vec2D, lhs = Vec2D)]
-#[sub(rhs = f64)] // TODO: Remove this.
 #[sub(out = Vec2D)]
 pub struct Point2D {
     pub x: f64,

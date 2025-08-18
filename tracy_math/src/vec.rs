@@ -4,8 +4,8 @@ use tracy_macros::{Random, add, div, mul, sub};
 #[derive(Clone, Copy, Default, Random)]
 #[add]
 #[sub]
-#[mul(rhs = f64, lhs = f64)]
-#[div(rhs = f64, lhs = f64)]
+#[mul(lhs = f64, rhs = f64)]
+#[div(lhs = f64, rhs = f64)]
 pub struct Vec3D {
     pub x: f64,
     pub y: f64,
@@ -35,7 +35,7 @@ impl Vec3D {
     }
 
     pub fn normalize(&self) -> Vec3D {
-        self.len_2().sqrt() / *self
+        *self / self.len_2().sqrt()
     }
 }
 

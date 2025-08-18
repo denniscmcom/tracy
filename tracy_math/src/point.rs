@@ -1,9 +1,9 @@
 use crate::vec::{Vec2D, Vec3D};
 use tracy_macros::{Random, add, sub};
 
-#[derive(Clone, Copy, Default)]
-#[add(rhs = Vec3D)]
-#[sub(rhs = Vec3D)]
+#[derive(Clone, Copy, Default, Random)]
+#[add(rhs = Vec3D, lhs = Vec3D)]
+#[sub(rhs = Vec3D, lhs = Vec3D)]
 #[sub(out = Vec3D)]
 pub struct Point3D {
     pub x: f64,
@@ -18,8 +18,10 @@ impl Point3D {
 }
 
 #[derive(Clone, Copy, Default, Random)]
-#[add(rhs = Vec2D)]
-#[sub(rhs = f64)]
+#[add(rhs = Vec2D, lhs = Vec2D)]
+#[sub(rhs = Vec2D, lhs = Vec2D)]
+#[sub(rhs = f64)] // TODO: Remove this.
+#[sub(out = Vec2D)]
 pub struct Point2D {
     pub x: f64,
     pub y: f64,

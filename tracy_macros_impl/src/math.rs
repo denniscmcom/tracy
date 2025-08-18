@@ -1,7 +1,7 @@
 use crate::io::StructInput;
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use quote::{ToTokens, quote, quote_spanned};
+use quote::{ToTokens, quote};
 use syn::{
     GenericParam, Ident, Token, Type,
     parse::{Parse, ParseStream},
@@ -200,7 +200,7 @@ impl MathOp {
         let build_op_lhs = |lhs_ty: &Type| -> TokenStream2 {
             let fields = input.fields.iter().map(|f| {
                 if self.is_scalar(&lhs_ty) {
-                    return quote! {#f: self #op rhs.#f};
+                    return quote! {#f: self.clone() #op rhs.#f};
                 }
 
                 quote! {#f: self.#f #op rhs.#f}

@@ -1,9 +1,11 @@
-use tracy_macros::{add, mul};
+use tracy_macros::{add, div, mul, sub};
 
 #[derive(Clone, Copy, Default)]
 #[add]
+#[sub]
 #[mul]
 #[mul(rhs = T)]
+#[div(rhs = T)]
 pub struct ColorRGB<T>
 where
     T: Clone,

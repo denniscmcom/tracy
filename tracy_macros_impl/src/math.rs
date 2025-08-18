@@ -1,7 +1,7 @@
 use crate::io::StructInput;
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use quote::quote;
+use quote::{ToTokens, quote, quote_spanned};
 use syn::{
     GenericParam, Ident, Token, Type,
     parse::{Parse, ParseStream},
@@ -29,12 +29,14 @@ pub fn impl_div_macro(attr: Attr, input: StructInput) -> TokenStream {
 }
 
 pub struct Attr {
+    pub lhs_ty: Option<Type>,
     pub rhs_ty: Option<Type>,
     pub out_ty: Option<Type>,
 }
 
 impl Parse for Attr {
     fn parse(input: ParseStream) -> syn::Result<Self> {
+        let mut lhs_ty: Option<Type> = None;
         let mut rhs_ty: Option<Type> = None;
         let mut out_ty: Option<Type> = None;
 
@@ -44,6 +46,7 @@ impl Parse for Attr {
             let val: Type = input.parse()?;
 
             match key.to_string().as_str() {
+                "lhs" => lhs_ty = Some(val),
                 "rhs" => rhs_ty = Some(val),
                 "out" => out_ty = Some(val),
                 other => {
@@ -59,16 +62,11 @@ impl Parse for Attr {
             }
         }
 
-        Ok(Self { rhs_ty, out_ty })
-    }
-}
-
-impl Attr {
-    fn unwrap(self, self_ty: &Type) -> (Type, Type) {
-        (
-            self.rhs_ty.unwrap_or_else(|| parse_quote! {#self_ty}),
-            self.out_ty.unwrap_or_else(|| parse_quote! {#self_ty}),
-        )
+        Ok(Self {
+            lhs_ty,
+            rhs_ty,
+            out_ty,
+        })
     }
 }
 
@@ -86,12 +84,12 @@ struct MathOp {
     op_assign: TokenStream2,
     op_assign_trait: TokenStream2,
     op_assign_fn: TokenStream2,
-    scalar_tys: Vec<String>,
+    scalars: Vec<String>,
 }
 
 impl MathOp {
     fn new(op_ty: MathOpTy) -> Self {
-        let scalar_tys = vec![
+        let scalars = vec![
             "f32", "f64", "u8", "u16", "u32", "u64", "usize", "i8", "i16",
             "i32", "i64", "isize",
         ]
@@ -108,7 +106,7 @@ impl MathOp {
                     op_assign: quote! {+=},
                     op_assign_trait: quote! {std::ops::AddAssign},
                     op_assign_fn: quote! {add_assign},
-                    scalar_tys,
+                    scalars,
                 };
             }
 
@@ -120,7 +118,7 @@ impl MathOp {
                     op_assign: quote! {-=},
                     op_assign_trait: quote! {std::ops::SubAssign},
                     op_assign_fn: quote! {sub_assign},
-                    scalar_tys,
+                    scalars,
                 };
             }
             MathOpTy::Mul => {
@@ -131,7 +129,7 @@ impl MathOp {
                     op_assign: quote! {*=},
                     op_assign_trait: quote! {std::ops::MulAssign},
                     op_assign_fn: quote! {mul_assign},
-                    scalar_tys,
+                    scalars,
                 };
             }
             MathOpTy::Div => {
@@ -142,91 +140,123 @@ impl MathOp {
                     op_assign: quote! {/=},
                     op_assign_trait: quote! {std::ops::DivAssign},
                     op_assign_fn: quote! {div_assign},
-                    scalar_tys,
+                    scalars,
                 };
             }
         };
     }
 
     fn generate(&mut self, attr: Attr, input: StructInput) -> TokenStream2 {
-        let op_trait = &self.op_trait;
-        let op_assign_trait = &self.op_assign_trait;
-        let op = &self.op;
-        let op_assign = &self.op_assign;
-
         let mut generics = input.ast.generics.clone();
         let mut where_clause = generics.make_where_clause().clone();
 
-        let (impl_generics, ty_generics, _) = generics.split_for_impl();
-        let struct_ident = input.ident;
-        let struct_ty: syn::Type = parse_quote! {#struct_ident #ty_generics};
-        let (rhs_ty, out_ty) = attr.unwrap(&struct_ty);
+        let op_trait = &self.op_trait;
+        let op_assign_trait = &self.op_assign_trait;
 
-        generics.params.iter().for_each(|g| {
+        for g in generics.params.iter() {
             if let GenericParam::Type(ty) = g {
-                let predicates = &mut where_clause.predicates;
-                self.scalar_tys.push(ty.ident.to_string());
-                predicates.push(parse_quote! {#ty: Clone});
-                predicates.push(parse_quote! {#ty: Copy});
-                predicates.push(parse_quote! {#ty: #op_trait<Output = #ty>});
-                predicates.push(parse_quote! {#ty: #op_assign_trait});
+                self.scalars.push(ty.ident.to_string());
+
+                // FIXME: Remove op trait from op assign and viceversa.
+                let pred = &mut where_clause.predicates;
+                pred.push(parse_quote! {#ty: #op_trait<Output = #ty>});
+                pred.push(parse_quote! {#ty: #op_assign_trait});
             }
-        });
+        }
 
-        let (op_fields, op_assign_fields): (Vec<_>, Vec<_>) = input
-            .fields
-            .iter()
-            .map(|f| {
-                if self.is_scalar(&rhs_ty) {
-                    (
-                        quote! {#f: self.#f #op rhs},
-                        quote! {self.#f #op_assign rhs},
-                    )
-                } else {
-                    (
-                        quote! {#f: self.#f #op rhs.#f},
-                        quote! {self.#f #op_assign rhs.#f},
-                    )
-                }
-            })
-            .unzip();
-
+        let (impl_gens, ty_gens, _) = generics.split_for_impl();
+        let ident = input.ident;
         let op_fn = &self.op_fn;
-        let out_ident = match &out_ty {
-            Type::Path(out_ty_path) => {
-                &out_ty_path.path.segments.last().unwrap().ident
-            }
-            _ => panic!("failed to extract ident from out_ty"),
-        };
 
-        let op_impl = quote! {
-            impl #impl_generics #op_trait<#rhs_ty> for #struct_ty
-            #where_clause {
-                type Output = #out_ty;
+        let op = &self.op;
+        let op_trait = &self.op_trait;
+        let out_ty = attr
+            .out_ty
+            .clone()
+            .unwrap_or(parse_quote! {#ident #ty_gens});
 
-                fn #op_fn(self, rhs: #rhs_ty) -> #out_ty {
-                    #out_ident {
-                       #(#op_fields),*
+        let build_op = |rhs_ty: &Type| -> TokenStream2 {
+            let fields = input.fields.iter().map(|f| {
+                if self.is_scalar(&rhs_ty) {
+                    return quote! {#f: self.#f #op rhs.clone()};
+                }
+
+                quote! {#f: self.#f #op rhs.#f}
+            });
+
+            quote! {
+                impl #impl_gens #op_trait<#rhs_ty> for #ident #ty_gens
+                #where_clause {
+                    type Output = #out_ty;
+                    fn #op_fn(self, rhs: #rhs_ty) -> Self::Output {
+                        Self::Output {
+                            #(#fields),*
+                        }
                     }
                 }
             }
         };
 
-        let op_assign_fn = &self.op_assign_fn;
+        let build_op_lhs = |lhs_ty: &Type| -> TokenStream2 {
+            let fields = input.fields.iter().map(|f| {
+                if self.is_scalar(&lhs_ty) {
+                    return quote! {#f: self #op rhs.#f};
+                }
 
-        let op_assign_impl = quote! {
-            impl #impl_generics #op_assign_trait<#rhs_ty> for #struct_ty
-            #where_clause {
-                fn #op_assign_fn(&mut self, rhs: #rhs_ty) {
-                    #(#op_assign_fields);*
+                quote! {#f: self.#f #op rhs.#f}
+            });
+
+            quote! {
+                impl #impl_gens #op_trait<#ident #ty_gens> for #lhs_ty
+                #where_clause {
+                    type Output = #out_ty;
+                    fn #op_fn(self, rhs: #ident #ty_gens) -> Self::Output {
+                        Self::Output {
+                            #(#fields),*
+                        }
+                    }
                 }
             }
         };
 
-        let ast = input.ast;
-        let generated = quote! {#ast #op_impl #op_assign_impl};
+        let build_op_assign = |rhs_ty: &Type| -> TokenStream2 {
+            let op_assign = &self.op_assign;
+            let op_assign_fn = &self.op_assign_fn;
+            let op_assign_trait = &self.op_assign_trait;
+            let fields = input.fields.iter().map(|f| {
+                if self.is_scalar(&rhs_ty) {
+                    return quote! {self.#f #op_assign rhs.clone()};
+                }
 
-        generated.into()
+                quote! {self.#f #op_assign rhs.#f}
+            });
+
+            quote! {
+                impl #impl_gens #op_assign_trait<#rhs_ty> for #ident #ty_gens
+                #where_clause {
+                    fn #op_assign_fn(&mut self, rhs: #rhs_ty) {
+                        #(#fields);*
+                    }
+                }
+            }
+        };
+
+        let mut tokens = Vec::new();
+        tokens.push(input.ast.to_token_stream());
+
+        if let Some(lhs_ty) = attr.lhs_ty {
+            tokens.push(build_op_lhs(&lhs_ty));
+
+            if let Some(rhs_ty) = attr.rhs_ty {
+                tokens.push(build_op(&rhs_ty));
+            }
+        } else {
+            let rhs_ty = attr.rhs_ty.unwrap_or(parse_quote! {#ident #ty_gens});
+            tokens.push(build_op(&rhs_ty));
+            tokens.push(build_op_assign(&rhs_ty));
+        }
+
+        tokens.into_iter().collect()
     }
 
     fn is_scalar(&self, ty: &Type) -> bool {
@@ -235,7 +265,7 @@ impl MathOp {
                 .path
                 .segments
                 .iter()
-                .any(|s| self.scalar_tys.contains(&s.ident.to_string()));
+                .any(|s| self.scalars.contains(&s.ident.to_string()));
         }
 
         false

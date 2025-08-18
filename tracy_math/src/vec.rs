@@ -1,3 +1,4 @@
+use std::ops::Neg;
 use tracy_macros::{Random, add, div, mul, sub};
 
 #[derive(Clone, Copy, Default, Random)]
@@ -38,10 +39,34 @@ impl Vec3D {
     }
 }
 
-impl std::ops::Neg for Vec3D {
+impl Neg for Vec3D {
     type Output = Vec3D;
 
     fn neg(self) -> Self::Output {
         Vec3D::new(-self.x, -self.y, -self.z)
+    }
+}
+
+#[derive(Clone, Copy, Default, Random)]
+#[add]
+#[sub]
+#[mul(rhs = f64)]
+#[div(rhs = f64)]
+pub struct Vec2D {
+    pub x: f64,
+    pub y: f64,
+}
+
+impl Vec2D {
+    pub fn new(x: f64, y: f64) -> Self {
+        Self { x, y }
+    }
+}
+
+impl Neg for Vec2D {
+    type Output = Vec2D;
+
+    fn neg(self) -> Self::Output {
+        Vec2D::new(-self.x, -self.y)
     }
 }

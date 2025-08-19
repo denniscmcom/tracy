@@ -146,14 +146,19 @@ impl MathOp {
         };
     }
 
+    // TODO: Implement wrapper types to output a primitive type.
+    // Example:
+    // 10.0 degress / 5.0 degrees = 2.0 (unitless)
+    // #[div(out = f64)]
+    // struct Degrees(f64)
     fn generate(&mut self, attr: Attr, input: StructInput) -> TokenStream2 {
-        let mut generics = input.ast.generics.clone();
-        let mut where_clause = generics.make_where_clause().clone();
+        let mut gens = input.ast.generics.clone();
+        let mut where_clause = gens.make_where_clause().clone();
 
         let op_trait = &self.op_trait;
         let op_assign_trait = &self.op_assign_trait;
 
-        for g in generics.params.iter() {
+        for g in gens.params.iter() {
             if let GenericParam::Type(ty) = g {
                 self.scalars.push(ty.ident.to_string());
 
@@ -164,7 +169,7 @@ impl MathOp {
             }
         }
 
-        let (impl_gens, ty_gens, _) = generics.split_for_impl();
+        let (impl_gens, ty_gens, _) = gens.split_for_impl();
         let ident = input.ident;
         let op_fn = &self.op_fn;
 
@@ -197,6 +202,7 @@ impl MathOp {
             }
         };
 
+        // TODO: Integrate this closure in a single build_op.
         let build_op_lhs = |lhs_ty: &Type| -> TokenStream2 {
             let fields = input.fields.iter().map(|f| {
                 if self.is_scalar(&lhs_ty) {

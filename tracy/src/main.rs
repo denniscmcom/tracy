@@ -16,7 +16,9 @@ fn run() {
         at: Point3D::new(0.0, 0.0, -1.0),
         up: Vec3D::new(0.0, 1.0, 0.0),
         img_w: 400,
-        fov: Degrees::new(90.0),
+        fov: Degrees::new(20.0),
+        defocus_angle: Degrees::new(10.0),
+        focus_dist: 3.4,
     };
 
     let cam = cam_builder.build();

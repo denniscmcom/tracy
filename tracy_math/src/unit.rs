@@ -1,9 +1,13 @@
 use tracy_macros::{add, div, mul, sub};
 
+#[derive(Copy, Clone)]
 #[add]
+#[add(lhs = f64, rhs = f64)]
 #[sub]
+#[sub(lhs = f64, rhs = f64)]
 #[mul]
-#[div]
+#[mul(lhs = f64, rhs = f64)]
+#[div(lhs = f64, rhs = f64)]
 pub struct Degrees(f64);
 
 impl Degrees {
@@ -14,12 +18,19 @@ impl Degrees {
     pub fn to_radians(self) -> Radians {
         Radians(f64::to_radians(self.0))
     }
+
+    pub fn to_f64(self) -> f64 {
+        self.0
+    }
 }
 
 #[add]
+#[add(lhs = f64, rhs = f64)]
 #[sub]
+#[sub(lhs = f64, rhs = f64)]
 #[mul]
-#[div]
+#[mul(lhs = f64, rhs = f64)]
+#[div(lhs = f64, rhs = f64)]
 pub struct Radians(f64);
 
 impl Radians {
@@ -35,7 +46,7 @@ impl Radians {
         self.0
     }
 
-    pub fn tan(self) -> Radians {
-        Radians(f64::tan(self.0))
+    pub fn tan(self) -> f64 {
+        f64::tan(self.0)
     }
 }

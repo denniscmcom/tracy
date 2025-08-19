@@ -36,8 +36,9 @@ impl Renderer {
                         Point2D::random_range(0.0..1.0) - Vec2D::new(0.5, 0.5);
 
                     let px_sample = cam.sample_px(px_idx, offset);
-                    let ray_dir = px_sample - cam.orig;
-                    let ray = Ray::new(cam.orig, ray_dir, self.depth);
+                    let ray_orig = cam.sample_lens();
+                    let ray_dir = px_sample - ray_orig;
+                    let ray = Ray::new(ray_orig, ray_dir, self.depth);
                     px += self.trace(ray, &scene.geo);
                 }
 

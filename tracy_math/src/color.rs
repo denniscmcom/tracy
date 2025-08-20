@@ -1,6 +1,6 @@
-use tracy_macros::{add, div, mul, sub};
+use tracy_macros::{Random, add, div, mul, sub};
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Random)]
 #[add]
 #[sub]
 #[mul]

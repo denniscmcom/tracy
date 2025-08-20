@@ -158,6 +158,7 @@ impl MathOp {
         let op_trait = &self.op_trait;
         let op_assign_trait = &self.op_assign_trait;
 
+        // TODO: Only support one generic parameter at the moment.
         for g in gens.params.iter() {
             if let GenericParam::Type(ty) = g {
                 self.scalars.push(ty.ident.to_string());

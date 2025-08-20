@@ -39,6 +39,7 @@ impl Vec3D {
     }
 }
 
+// TODO: Move Neg to a Derive macro.
 impl Neg for Vec3D {
     type Output = Vec3D;
 

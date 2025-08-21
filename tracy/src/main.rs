@@ -17,7 +17,7 @@ fn run() {
         orig: Point3D::new(13.0, 2.0, 3.0),
         at: Point3D::new(0.0, 0.0, 0.0),
         up: Vec3D::new(0.0, 1.0, 0.0),
-        img_w: 1920,
+        img_w: 400,
         fov: Degrees::new(20.0),
         defocus_angle: Degrees::new(0.6),
         focus_dist: 10.0,
@@ -108,11 +108,8 @@ fn run() {
     });
 
     let scene = Scene::new(cam, spheres);
-    let renderer = Renderer {
-        samples_per_px: 500,
-        depth: 50,
-    };
+    let renderer = Renderer { spp: 10, depth: 2 };
 
-    let buf = renderer.render(scene);
+    let buf = renderer.render(&scene);
     export(buf, "test").expect("export failed");
 }

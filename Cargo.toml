@@ -2,6 +2,7 @@
 resolver = "3"
 members = [
 	"tracy",
+	"tracy_benchmark",
 	"tracy_export",
 	"tracy_import",
 	"tracy_macros",

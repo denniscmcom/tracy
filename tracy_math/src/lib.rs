@@ -1,9 +1,8 @@
+pub mod color;
+pub mod point;
+pub mod ray;
 pub mod unit;
-
-mod color;
-mod point;
-mod ray;
-mod vec;
+pub mod vec;
 
 pub use color::ColorRGB;
 pub use point::{Point2D, Point3D};

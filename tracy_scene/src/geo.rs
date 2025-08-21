@@ -10,7 +10,7 @@ pub trait Geo {
     fn hit(
         &self,
         ray: &Ray,
-        range: &RangeInclusive<f64>,
+        range: RangeInclusive<f64>,
     ) -> Option<(Hit, Rc<dyn Mat>)>;
 }
 

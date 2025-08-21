@@ -15,7 +15,7 @@ impl Geo for Sphere {
     fn hit(
         &self,
         ray: &Ray,
-        range: &RangeInclusive<f64>,
+        range: RangeInclusive<f64>,
     ) -> Option<(Hit, Rc<dyn Mat>)> {
         let oc = self.orig - ray.orig;
         let a = ray.dir.len_2();
@@ -61,14 +61,14 @@ impl Geo for Vec<Sphere> {
     fn hit(
         &self,
         ray: &Ray,
-        range: &RangeInclusive<f64>,
+        range: RangeInclusive<f64>,
     ) -> Option<(Hit, Rc<dyn Mat>)> {
         let mut hits = Vec::new();
         let mut closest = *range.end();
 
         for sphere in self {
             let ray_range = *range.start()..=closest;
-            if let Some((hit, mat)) = sphere.hit(ray, &ray_range) {
+            if let Some((hit, mat)) = sphere.hit(ray, ray_range) {
                 closest = hit.ray_t;
                 hits.push((hit, mat));
             }
@@ -76,5 +76,31 @@ impl Geo for Vec<Sphere> {
 
         hits.into_iter()
             .min_by(|a, b| a.0.ray_t.partial_cmp(&b.0.ray_t).unwrap())
+    }
+}
+
+pub mod benchmarks {
+    use super::*;
+    use crate::mat;
+    use tracy_math::{ColorRGB, Vec3D};
+
+    pub fn sphere_hit() -> impl Fn() {
+        let s = Sphere {
+            orig: Point3D::new(0.0, 0.0, -10.0),
+            r: 1.0,
+            mat: Rc::new(mat::Lambert {
+                albedo: ColorRGB::new(1.0, 0.0, 0.0),
+            }),
+        };
+
+        let ray = Ray {
+            orig: Point3D::new(0.0, 0.0, 0.0),
+            dir: Vec3D::new(0.0, 0.0, -1.0),
+            depth: 1,
+        };
+
+        move || {
+            s.hit(&ray, 0.0..=f64::MAX);
+        }
     }
 }

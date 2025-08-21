@@ -31,3 +31,31 @@ impl Point2D {
         Self { x, y }
     }
 }
+
+pub mod benchmarks {
+    use super::*;
+
+    pub fn point_3d_random() -> impl Fn() {
+        move || {
+            Point3D::random();
+        }
+    }
+
+    pub fn point_3d_random_range() -> impl Fn() {
+        move || {
+            Point3D::random_range(0.0..1.0);
+        }
+    }
+
+    pub fn point_2d_random() -> impl Fn() {
+        move || {
+            Point2D::random();
+        }
+    }
+
+    pub fn point_2d_random_range() -> impl Fn() {
+        move || {
+            Point2D::random_range(0.0..1.0);
+        }
+    }
+}

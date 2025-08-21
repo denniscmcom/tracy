@@ -1,6 +1,8 @@
 use std::ops::Neg;
 use tracy_macros::{Random, add, div, mul, sub};
 
+// TODO: Add a separate type for unit vector.
+
 #[derive(Clone, Copy, Default, Random)]
 #[add]
 #[sub]
@@ -73,5 +75,70 @@ impl Neg for Vec2D {
 
     fn neg(self) -> Self::Output {
         Vec2D::new(-self.x, -self.y)
+    }
+}
+
+pub mod benchmarks {
+    use super::*;
+
+    pub fn vec3d_len_2() -> impl Fn() {
+        let v = Vec3D::new(1.0, 2.0, 3.0);
+        move || {
+            v.len_2();
+        }
+    }
+
+    pub fn vec3d_dot() -> impl Fn() {
+        let v = Vec3D::new(1.0, 2.0, 3.0);
+        let u = Vec3D::new(4.0, 5.0, 6.0);
+        move || {
+            v.dot(&u);
+        }
+    }
+
+    pub fn vec3d_cross() -> impl Fn() {
+        let v = Vec3D::new(1.0, 2.0, 3.0);
+        let u = Vec3D::new(4.0, 5.0, 6.0);
+        move || {
+            v.cross(&u);
+        }
+    }
+
+    pub fn vec3d_normalize() -> impl Fn() {
+        let v = Vec3D::new(1.0, 2.0, 3.0);
+        move || {
+            v.normalize();
+        }
+    }
+
+    pub fn vec3d_random() -> impl Fn() {
+        move || {
+            Vec3D::random();
+        }
+    }
+
+    pub fn vec3d_random_range() -> impl Fn() {
+        move || {
+            Vec3D::random_range(0.0..1.0);
+        }
+    }
+
+    pub fn vec2d_len_2() -> impl Fn() {
+        let v = Vec2D::new(1.0, 2.0);
+        move || {
+            v.len_2();
+        }
+    }
+
+    pub fn vec2d_random() -> impl Fn() {
+        move || {
+            Vec2D::random();
+        }
+    }
+
+    pub fn vec2d_random_range() -> impl Fn() {
+        move || {
+            Vec2D::random_range(0.0..1.0);
+        }
     }
 }

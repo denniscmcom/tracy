@@ -119,6 +119,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "tracy_benchmark"
+version = "0.1.0"
+dependencies = [
+ "tracy_math",
+ "tracy_render",
+ "tracy_scene",
+]
+
+[[package]]
 name = "tracy_export"
 version = "0.1.0"
 dependencies = [

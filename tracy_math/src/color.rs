@@ -41,3 +41,33 @@ impl ColorRGB<f64> {
         }
     }
 }
+
+pub mod benchmarks {
+    use super::*;
+
+    pub fn color_rgb_scale() -> impl Fn() {
+        let color = ColorRGB::new(1.0, 2.0, 3.0);
+        move || {
+            color.scale();
+        }
+    }
+
+    pub fn color_rgb_to_gamma() -> impl Fn() {
+        let color = ColorRGB::new(1.0, 2.0, 3.0);
+        move || {
+            color.to_gamma();
+        }
+    }
+
+    pub fn color_rgb_random() -> impl Fn() {
+        move || {
+            ColorRGB::<f64>::random();
+        }
+    }
+
+    pub fn color_rgb_random_range() -> impl Fn() {
+        move || {
+            ColorRGB::<f64>::random_range(0.0..1.0);
+        }
+    }
+}

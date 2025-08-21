@@ -1,22 +1,18 @@
 use crate::{
-    geo::{Face, Geo, Hit},
+    geo::{Face, Geo, Hit, HitData},
     mat::Mat,
 };
-use std::{ops::RangeInclusive, rc::Rc};
+use std::{ops::RangeInclusive, sync::Arc};
 use tracy_math::{Point3D, Ray};
 
 pub struct Sphere {
     pub orig: Point3D,
     pub r: f64,
-    pub mat: Rc<dyn Mat>,
+    pub mat: Arc<dyn Mat + Sync + Send>,
 }
 
 impl Geo for Sphere {
-    fn hit(
-        &self,
-        ray: &Ray,
-        range: RangeInclusive<f64>,
-    ) -> Option<(Hit, Rc<dyn Mat>)> {
+    fn hit(&self, ray: &Ray, range: RangeInclusive<f64>) -> HitData {
         let oc = self.orig - ray.orig;
         let a = ray.dir.len_2();
         let h = ray.dir.dot(&oc);
@@ -53,16 +49,12 @@ impl Geo for Sphere {
             face,
         };
 
-        Some((hit, Rc::clone(&self.mat)))
+        Some((hit, Arc::clone(&self.mat)))
     }
 }
 
 impl Geo for Vec<Sphere> {
-    fn hit(
-        &self,
-        ray: &Ray,
-        range: RangeInclusive<f64>,
-    ) -> Option<(Hit, Rc<dyn Mat>)> {
+    fn hit(&self, ray: &Ray, range: RangeInclusive<f64>) -> HitData {
         let mut hits = Vec::new();
         let mut closest = *range.end();
 
@@ -88,7 +80,7 @@ pub mod benchmarks {
         let s = Sphere {
             orig: Point3D::new(0.0, 0.0, -10.0),
             r: 1.0,
-            mat: Rc::new(mat::Lambert {
+            mat: Arc::new(mat::Lambert {
                 albedo: ColorRGB::new(1.0, 0.0, 0.0),
             }),
         };

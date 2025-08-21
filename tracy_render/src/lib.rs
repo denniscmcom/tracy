@@ -1,8 +1,7 @@
+use rayon::prelude::*;
 use tracy_macros::Random;
 use tracy_math::{ColorRGB, Point2D, Ray, Vec2D};
 use tracy_scene::{Geo, Scene};
-
-// TODO: Split renderer in threads.
 
 pub struct Buf {
     pub px_data: Vec<ColorRGB<u8>>,
@@ -24,12 +23,16 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    pub fn render<T: Geo>(&self, scene: &Scene<T>) -> Buf {
+    pub fn render<T>(&self, scene: &Scene<T>) -> Buf
+    where
+        T: Geo + Sync,
+    {
         let cam = &scene.cam;
         let mut buf = Buf::new(cam.img_w, cam.img_h);
-
-        for y in 0..cam.img_h {
-            for x in 0..cam.img_w {
+        buf.px_data = (0..cam.img_w * cam.img_h)
+            .into_par_iter()
+            .map(|i| {
+                let (x, y) = (i % cam.img_w, i / cam.img_w);
                 let mut px = ColorRGB::new(0.0, 0.0, 0.0);
 
                 for _ in 0..self.spp {
@@ -45,9 +48,9 @@ impl Renderer {
                 }
 
                 px *= 1.0 / self.spp as f64;
-                buf.px_data.push(px.to_gamma().scale());
-            }
-        }
+                px.to_gamma().scale()
+            })
+            .collect();
 
         buf
     }
@@ -79,7 +82,7 @@ impl Renderer {
 
 pub mod benchmarks {
     use super::*;
-    use std::rc::Rc;
+    use std::sync::Arc;
     use tracy_math::{ColorRGB, Point3D, Vec3D, unit::Degrees};
     use tracy_scene::{Scene, cam::CamBuilder, geo::Sphere, mat};
 
@@ -98,7 +101,7 @@ pub mod benchmarks {
         let sphere = Sphere {
             orig: Point3D::new(0.0, 0.0, -10.0),
             r: 1.0,
-            mat: Rc::new(mat::Lambert {
+            mat: Arc::new(mat::Lambert {
                 albedo: ColorRGB::new(1.0, 0.0, 0.0),
             }),
         };
@@ -114,7 +117,7 @@ pub mod benchmarks {
         let sphere = Sphere {
             orig: Point3D::new(0.0, 0.0, -10.0),
             r: 1.0,
-            mat: Rc::new(mat::Lambert {
+            mat: Arc::new(mat::Lambert {
                 albedo: ColorRGB::new(1.0, 0.0, 0.0),
             }),
         };

@@ -1,5 +1,5 @@
 use rand::prelude::*;
-use std::{rc::Rc, time};
+use std::{sync::Arc, time};
 use tracy_export::export;
 use tracy_macros::Random;
 use tracy_math::{ColorRGB, Point3D, Vec3D, unit::Degrees};
@@ -17,7 +17,7 @@ fn run() {
         orig: Point3D::new(13.0, 2.0, 3.0),
         at: Point3D::new(0.0, 0.0, 0.0),
         up: Vec3D::new(0.0, 1.0, 0.0),
-        img_w: 400,
+        img_w: 1200,
         fov: Degrees::new(20.0),
         defocus_angle: Degrees::new(0.6),
         focus_dist: 10.0,
@@ -30,7 +30,7 @@ fn run() {
     spheres.push(Sphere {
         orig: Point3D::new(0.0, -1000.0, 0.0),
         r: 1000.0,
-        mat: Rc::new(mat::Lambert {
+        mat: Arc::new(mat::Lambert {
             albedo: ColorRGB::new(0.5, 0.5, 0.5),
         }),
     });
@@ -55,7 +55,7 @@ fn run() {
                         spheres.push(Sphere {
                             orig,
                             r: 0.2,
-                            mat: Rc::new(mat::Lambert {
+                            mat: Arc::new(mat::Lambert {
                                 albedo: color_a * color_b,
                             }),
                         });
@@ -65,7 +65,7 @@ fn run() {
                         spheres.push(Sphere {
                             orig,
                             r: 0.2,
-                            mat: Rc::new(mat::Metal {
+                            mat: Arc::new(mat::Metal {
                                 albedo: ColorRGB::random_range(0.0..1.0),
                                 fuzz: rng.random_range(0.0..0.5),
                             }),
@@ -76,7 +76,7 @@ fn run() {
                         spheres.push(Sphere {
                             orig,
                             r: 0.2,
-                            mat: Rc::new(mat::Dielectric { refract_idx: 1.5 }),
+                            mat: Arc::new(mat::Dielectric { refract_idx: 1.5 }),
                         });
                     }
                 }
@@ -87,13 +87,13 @@ fn run() {
     spheres.push(Sphere {
         orig: Point3D::new(0.0, 1.0, 0.0),
         r: 1.0,
-        mat: Rc::new(mat::Dielectric { refract_idx: 1.5 }),
+        mat: Arc::new(mat::Dielectric { refract_idx: 1.5 }),
     });
 
     spheres.push(Sphere {
         orig: Point3D::new(-4.0, 1.0, 0.0),
         r: 1.0,
-        mat: Rc::new(mat::Lambert {
+        mat: Arc::new(mat::Lambert {
             albedo: ColorRGB::new(0.4, 0.2, 0.1),
         }),
     });
@@ -101,14 +101,14 @@ fn run() {
     spheres.push(Sphere {
         orig: Point3D::new(4.0, 1.0, 0.0),
         r: 1.0,
-        mat: Rc::new(mat::Metal {
+        mat: Arc::new(mat::Metal {
             albedo: ColorRGB::new(0.7, 0.6, 0.5),
             fuzz: 0.0,
         }),
     });
 
     let scene = Scene::new(cam, spheres);
-    let renderer = Renderer { spp: 10, depth: 2 };
+    let renderer = Renderer { spp: 50, depth: 12 };
 
     let buf = renderer.render(&scene);
     export(buf, "test").expect("export failed");

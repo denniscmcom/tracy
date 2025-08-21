@@ -3,15 +3,13 @@ pub mod sphere;
 pub use sphere::Sphere;
 
 use crate::Mat;
-use std::{ops::RangeInclusive, rc::Rc};
+use std::{ops::RangeInclusive, sync::Arc};
 use tracy_math::{Point3D, Ray, Vec3D};
 
+type HitData = Option<(Hit, Arc<dyn Mat + Sync + Send>)>;
+
 pub trait Geo {
-    fn hit(
-        &self,
-        ray: &Ray,
-        range: RangeInclusive<f64>,
-    ) -> Option<(Hit, Rc<dyn Mat>)>;
+    fn hit(&self, ray: &Ray, range: RangeInclusive<f64>) -> HitData;
 }
 
 pub enum Face {

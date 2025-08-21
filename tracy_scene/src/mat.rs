@@ -3,7 +3,7 @@ use rand::Rng;
 use tracy_macros::Random;
 use tracy_math::{ColorRGB, Ray, Vec3D};
 
-pub trait Mat {
+pub trait Mat: Sync + Send {
     fn scatter(&self, ray: Ray, hit: Hit) -> Option<ScatterData>;
 }
 

@@ -9,7 +9,7 @@ use tracy_scene::{Scene, cam::CamBuilder, geo::Sphere, mat};
 fn main() {
     let start = time::Instant::now();
     run();
-    println!("Elapsed: {:?}", start.elapsed());
+    println!("Total: {:?}", start.elapsed());
 }
 
 fn run() {
@@ -108,8 +108,13 @@ fn run() {
     });
 
     let scene = Scene::new(cam, spheres);
-    let renderer = Renderer { spp: 50, depth: 12 };
+    let renderer = Renderer { spp: 50, depth: 10 };
 
+    let start_render = time::Instant::now();
     let buf = renderer.render(&scene);
+    println!("Render: {:?}", start_render.elapsed());
+
+    let start_export = time::Instant::now();
     export(buf, "test").expect("export failed");
+    println!("Export: {:?}", start_export.elapsed());
 }

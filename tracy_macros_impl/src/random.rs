@@ -41,7 +41,6 @@ pub fn impl_random_macro(input: StructInput) -> TokenStream {
 
     let random_impl = quote! {
         impl #impl_gens Random<#trait_ty> for #ident #ty_gens #where_clause {
-
             fn random() -> Self {
                 use rand::Rng;
                 let mut rng = rand::rng();
@@ -50,7 +49,7 @@ pub fn impl_random_macro(input: StructInput) -> TokenStream {
                 }
             }
 
-            // TODO: This function should accept Range or RangeInclusive.
+            // TODO: This function should accept Range and RangeInclusive.
             fn random_range(r: std::ops::Range<#trait_ty>) -> Self {
                 use rand::Rng;
                 let mut rng = rand::rng();

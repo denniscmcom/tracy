@@ -18,6 +18,11 @@ use tracy_math::{
 use tracy_render::benchmarks::{renderer_render, renderer_trace};
 use tracy_scene::geo::sphere::benchmarks::sphere_hit;
 
+// TODO: This method could be improved.
+// Maybe I can put a macro in each bechmark module. This macro would read the
+// functions names of each benchmark and export them to a text file in /target
+// Then, in this crate I could read that text file with another macro and
+// generate each call to those functions.
 fn main() {
     bench_render();
     bench_math();
@@ -63,4 +68,5 @@ fn bench_scene() {
     println!("---");
     println!("math");
     bench("Sphere.hit", sphere_hit());
+    // TODO: Finish scene benchmarks.
 }

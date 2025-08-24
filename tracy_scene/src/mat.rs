@@ -7,7 +7,6 @@ pub trait Mat: Sync + Send {
     fn scatter(&self, ray: Ray, hit: Hit) -> Option<ScatterData>;
 }
 
-// TODO: I don't like this name.
 pub struct ScatterData {
     pub ray: Ray,
     pub attenuation: ColorRGB<f64>,

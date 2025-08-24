@@ -1,9 +1,8 @@
-use std::ops::Neg;
-use tracy_macros::{Random, add, div, mul, sub};
+use tracy_macros::{Neg, Random, add, div, mul, sub};
 
 // TODO: Add a separate type for unit vector.
 
-#[derive(Clone, Copy, Default, Random)]
+#[derive(Clone, Copy, Default, Random, Neg)]
 #[add]
 #[sub]
 #[mul(lhs = f64, rhs = f64)]
@@ -41,16 +40,7 @@ impl Vec3D {
     }
 }
 
-// TODO: Move Neg to a Derive macro.
-impl Neg for Vec3D {
-    type Output = Vec3D;
-
-    fn neg(self) -> Self::Output {
-        Vec3D::new(-self.x, -self.y, -self.z)
-    }
-}
-
-#[derive(Clone, Copy, Default, Random)]
+#[derive(Clone, Copy, Default, Random, Neg)]
 #[add]
 #[sub]
 #[mul(lhs = f64)]
@@ -67,14 +57,6 @@ impl Vec2D {
 
     pub fn len_2(&self) -> f64 {
         self.x * self.x + self.y * self.y
-    }
-}
-
-impl Neg for Vec2D {
-    type Output = Vec2D;
-
-    fn neg(self) -> Self::Output {
-        Vec2D::new(-self.x, -self.y)
     }
 }
 

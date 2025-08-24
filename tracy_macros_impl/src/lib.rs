@@ -1,5 +1,6 @@
 mod io;
 mod math;
+mod neg;
 mod random;
 
 use proc_macro::TokenStream;
@@ -37,4 +38,10 @@ pub fn div(attr: TokenStream, input: TokenStream) -> TokenStream {
 pub fn rand_derive(input: TokenStream) -> TokenStream {
     let parsed_input = parse_macro_input!(input);
     random::impl_random_macro(parsed_input)
+}
+
+#[proc_macro_derive(Neg)]
+pub fn neg_derive(input: TokenStream) -> TokenStream {
+    let parsed_input = parse_macro_input!(input);
+    neg::impl_neg_macro(parsed_input)
 }

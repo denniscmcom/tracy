@@ -1,7 +1,7 @@
 use crate::vec::{Vec2D, Vec3D};
-use tracy_macros::{Random, add, sub};
+use tracy_macros::{Neg, Random, add, sub};
 
-#[derive(Clone, Copy, Default, Random)]
+#[derive(Clone, Copy, Default, Random, Neg)]
 #[add(rhs = Vec3D, lhs = Vec3D)]
 #[sub(rhs = Vec3D, lhs = Vec3D)]
 #[sub(out = Vec3D)]
@@ -17,7 +17,7 @@ impl Point3D {
     }
 }
 
-#[derive(Clone, Copy, Default, Random)]
+#[derive(Clone, Copy, Default, Random, Neg)]
 #[add(rhs = Vec2D, lhs = Vec2D)]
 #[sub(rhs = Vec2D, lhs = Vec2D)]
 #[sub(out = Vec2D)]

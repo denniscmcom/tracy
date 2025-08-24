@@ -1,6 +1,6 @@
-use tracy_macros::{Random, add, div, mul, sub};
+use tracy_macros::{Neg, Random, add, div, mul, sub};
 
-#[derive(Copy, Clone, Random)]
+#[derive(Copy, Clone, Random, Neg)]
 #[add]
 #[add(lhs = f64, rhs = f64)]
 #[sub]
@@ -24,7 +24,7 @@ impl Degrees {
     }
 }
 
-#[derive(Copy, Clone, Random)]
+#[derive(Copy, Clone, Random, Neg)]
 #[add]
 #[add(lhs = f64, rhs = f64)]
 #[sub]

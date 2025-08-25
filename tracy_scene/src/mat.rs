@@ -26,7 +26,12 @@ impl Mat for Lambert {
         }
 
         return Some(ScatterData {
-            ray: Ray::new(hit.orig, dir, ray.depth - 1),
+            ray: Ray {
+                orig: hit.orig,
+                dir,
+                depth: ray.depth - 1,
+                ts: ray.ts,
+            },
             attenuation: self.albedo,
         });
     }
@@ -48,7 +53,12 @@ impl Mat for Metal {
         }
 
         Some(ScatterData {
-            ray: Ray::new(hit.orig, dir, ray.depth - 1),
+            ray: Ray {
+                orig: hit.orig,
+                dir,
+                depth: ray.depth - 1,
+                ts: ray.ts,
+            },
             attenuation: self.albedo,
         })
     }
@@ -80,7 +90,12 @@ impl Mat for Dielectric {
         };
 
         Some(ScatterData {
-            ray: Ray::new(hit.orig, dir, ray.depth - 1),
+            ray: Ray {
+                orig: hit.orig,
+                dir,
+                depth: ray.depth - 1,
+                ts: ray.ts,
+            },
             attenuation: ColorRGB::new(1.0, 1.0, 1.0),
         })
     }

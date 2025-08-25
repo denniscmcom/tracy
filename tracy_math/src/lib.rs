@@ -1,4 +1,5 @@
 pub mod color;
+pub mod num;
 pub mod point;
 pub mod ray;
 pub mod unit;

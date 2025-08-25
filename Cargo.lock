@@ -217,6 +217,7 @@ dependencies = [
 name = "tracy_render"
 version = "0.1.0"
 dependencies = [
+ "rand",
  "rayon",
  "tracy_macros",
  "tracy_math",

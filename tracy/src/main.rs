@@ -17,10 +17,13 @@ fn run() {
         orig: Point3D::new(13.0, 2.0, 3.0),
         at: Point3D::new(0.0, 0.0, 0.0),
         up: Vec3D::new(0.0, 1.0, 0.0),
-        img_w: 1200,
+        img_w: 400,
         fov: Degrees::new(20.0),
         defocus_angle: Degrees::new(0.6),
         focus_dist: 10.0,
+        fps: 24,
+        shutter_speed: time::Duration::from_secs_f64(1.0 / 48.0),
+        frames: 1,
     };
 
     let cam = cam_builder.build();
@@ -33,6 +36,7 @@ fn run() {
         mat: Arc::new(mat::Lambert {
             albedo: ColorRGB::new(0.5, 0.5, 0.5),
         }),
+        orig_2: None,
     });
 
     let mut rng = rand::rng();
@@ -58,6 +62,8 @@ fn run() {
                             mat: Arc::new(mat::Lambert {
                                 albedo: color_a * color_b,
                             }),
+                            orig_2: Some(orig + Vec3D::new(0.0, 0.5, 0.0)),
+                            // orig_2: None,
                         });
                     }
                     // Metal.
@@ -69,6 +75,7 @@ fn run() {
                                 albedo: ColorRGB::random_range(0.0..1.0),
                                 fuzz: rng.random_range(0.0..0.5),
                             }),
+                            orig_2: None,
                         });
                     }
                     // Glass.
@@ -77,6 +84,7 @@ fn run() {
                             orig,
                             r: 0.2,
                             mat: Arc::new(mat::Dielectric { refract_idx: 1.5 }),
+                            orig_2: None,
                         });
                     }
                 }
@@ -88,6 +96,7 @@ fn run() {
         orig: Point3D::new(0.0, 1.0, 0.0),
         r: 1.0,
         mat: Arc::new(mat::Dielectric { refract_idx: 1.5 }),
+        orig_2: None,
     });
 
     spheres.push(Sphere {
@@ -96,6 +105,7 @@ fn run() {
         mat: Arc::new(mat::Lambert {
             albedo: ColorRGB::new(0.4, 0.2, 0.1),
         }),
+        orig_2: None,
     });
 
     spheres.push(Sphere {
@@ -105,10 +115,14 @@ fn run() {
             albedo: ColorRGB::new(0.7, 0.6, 0.5),
             fuzz: 0.0,
         }),
+        orig_2: None,
     });
 
     let scene = Scene::new(cam, spheres);
-    let renderer = Renderer { spp: 50, depth: 10 };
+    let renderer = Renderer {
+        spp: 100,
+        depth: 50,
+    };
 
     let start_render = time::Instant::now();
     let buf = renderer.render(&scene);

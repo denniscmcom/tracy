@@ -1,14 +1,28 @@
 use crate::{
     geo::{Face, Geo, Hit, HitData},
-    mat::Mat,
+    mat::{self, Mat},
 };
-use std::{ops::RangeInclusive, sync::Arc};
-use tracy_math::{Point3D, Ray};
+use std::{ops::RangeInclusive, sync::Arc, time};
+use tracy_math::{ColorRGB, Point3D, Ray};
 
 pub struct Sphere {
     pub orig: Point3D,
     pub r: f64,
     pub mat: Arc<dyn Mat + Sync + Send>,
+    pub orig_2: Option<Point3D>,
+}
+
+impl Sphere {
+    pub fn new(orig: Point3D, r: f64) -> Self {
+        Self {
+            orig,
+            r,
+            mat: Arc::new(mat::Lambert {
+                albedo: ColorRGB::new(1.0, 0.0, 0.0),
+            }),
+            orig_2: None,
+        }
+    }
 }
 
 impl Geo for Sphere {
@@ -51,6 +65,25 @@ impl Geo for Sphere {
 
         Some((hit, Arc::clone(&self.mat)))
     }
+
+    fn at(&self, ts: time::Duration, total: time::Duration) -> Self {
+        if let Some(orig_2) = self.orig_2 {
+            let p = ts.as_secs_f64() / total.as_secs_f64();
+            return Self {
+                orig: self.orig.lerp(orig_2, p),
+                r: self.r,
+                mat: Arc::clone(&self.mat),
+                orig_2: Some(orig_2.clone()),
+            };
+        }
+
+        Self {
+            orig: self.orig,
+            r: self.r,
+            mat: Arc::clone(&self.mat),
+            orig_2: None,
+        }
+    }
 }
 
 impl Geo for Vec<Sphere> {
@@ -69,30 +102,23 @@ impl Geo for Vec<Sphere> {
         hits.into_iter()
             .min_by(|a, b| a.0.ray_t.partial_cmp(&b.0.ray_t).unwrap())
     }
+
+    fn at(&self, ts: time::Duration, total: time::Duration) -> Self {
+        self.into_iter().map(|s| s.at(ts, total)).collect()
+    }
 }
 
 pub mod benchmarks {
     use super::*;
-    use crate::mat;
-    use tracy_math::{ColorRGB, Vec3D};
+    use tracy_math::Vec3D;
 
     pub fn sphere_hit() -> impl Fn() {
-        let s = Sphere {
-            orig: Point3D::new(0.0, 0.0, -10.0),
-            r: 1.0,
-            mat: Arc::new(mat::Lambert {
-                albedo: ColorRGB::new(1.0, 0.0, 0.0),
-            }),
-        };
-
-        let ray = Ray {
-            orig: Point3D::new(0.0, 0.0, 0.0),
-            dir: Vec3D::new(0.0, 0.0, -1.0),
-            depth: 1,
-        };
+        let sphere = Sphere::new(Point3D::new(0.0, 0.0, -10.0), 1.0);
+        let ray =
+            Ray::new(Point3D::new(0.0, 0.0, 0.0), Vec3D::new(0.0, 0.0, -1.0));
 
         move || {
-            s.hit(&ray, 0.0..=f64::MAX);
+            sphere.hit(&ray, 0.0..=f64::MAX);
         }
     }
 }

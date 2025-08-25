@@ -1,4 +1,5 @@
 use crate::{Point3D, Vec3D};
+use std::time::Duration;
 
 /// # Ray.
 ///
@@ -22,11 +23,17 @@ pub struct Ray {
     pub orig: Point3D,
     pub dir: Vec3D,
     pub depth: usize,
+    pub ts: Duration,
 }
 
 impl Ray {
-    pub fn new(orig: Point3D, dir: Vec3D, depth: usize) -> Self {
-        Self { orig, dir, depth }
+    pub fn new(orig: Point3D, dir: Vec3D) -> Self {
+        Self {
+            orig,
+            dir,
+            depth: 1,
+            ts: Duration::from_secs(0),
+        }
     }
 
     pub fn at(&self, t: f64) -> Point3D {
@@ -42,6 +49,7 @@ pub mod bechmarks {
             orig: Point3D::new(1.0, 2.0, 3.0),
             dir: Vec3D::new(3.0, 2.0, 1.0),
             depth: 1,
+            ts: Duration::from_secs(0),
         };
 
         move || {

@@ -15,7 +15,7 @@ use tracy_math::{
         vec3d_len_2, vec3d_normalize, vec3d_random, vec3d_random_range,
     },
 };
-use tracy_render::benchmarks::{renderer_render, renderer_trace};
+use tracy_render::benchmarks::renderer_render;
 use tracy_scene::geo::sphere::benchmarks::sphere_hit;
 
 // TODO: This method could be improved.
@@ -33,7 +33,6 @@ fn bench_render() {
     println!("---");
     println!("render");
     bench("Renderer.render", renderer_render());
-    bench("Renderer.trace", renderer_trace());
 }
 
 fn bench_math() {

@@ -1,5 +1,10 @@
+use crate::Geo;
+use rand::Rng;
+use std::time::Duration;
 use tracy_macros::Random;
-use tracy_math::{Point2D, Point3D, Vec2D, Vec3D, unit::Degrees};
+use tracy_math::{
+    ColorRGB, Point2D, Point3D, Ray, Vec2D, Vec3D, unit::Degrees,
+};
 
 pub struct Cam {
     pub orig: Point3D,
@@ -11,9 +16,41 @@ pub struct Cam {
     defocus_angle: Degrees,
     defocus_disk_u: Vec3D,
     defocus_disk_v: Vec3D,
+    fps: usize,
+    shutter_speed: Duration,
+    frames: usize,
 }
 
 impl Cam {
+    pub fn trace<T: Geo + Sync>(&self, ray: Ray, geo: &T) -> ColorRGB<f64> {
+        if ray.depth == 0 {
+            return ColorRGB::new(0.0, 0.0, 0.0);
+        }
+
+        let geo = geo.at(
+            ray.ts,
+            Duration::from_secs_f64(self.frames as f64 / self.fps as f64),
+        );
+
+        if let Some((hit, mat)) = geo.hit(&ray, 0.001..=f64::MAX) {
+            loop {
+                if let Some(scatter_data) = mat.scatter(ray, hit) {
+                    return self.trace(scatter_data.ray, &geo)
+                        * scatter_data.attenuation;
+                }
+
+                return ColorRGB::new(0.0, 0.0, 0.0);
+            }
+        }
+
+        // Gradient background.
+        let dir_u = ray.dir / ray.dir.len_2().sqrt();
+        let a = 0.5 * (dir_u.y + 1.0);
+        let start_color = ColorRGB::new(1.0, 1.0, 1.0);
+        let end_color = ColorRGB::new(0.5, 0.7, 1.0);
+        start_color * (1.0 - a) + end_color * a
+    }
+
     pub fn sample_px(&self, px_idx: Point2D, offset: Point2D) -> Point3D {
         self.px_00
             + (self.vw_du * (px_idx.x as f64 + offset.x as f64))
@@ -35,6 +72,15 @@ impl Cam {
 
         let p = random_vec();
         self.orig + (p.x * self.defocus_disk_u) + (p.y * self.defocus_disk_v)
+    }
+
+    pub fn sample_time(&self) -> Duration {
+        // FIXME: Assuming frames = 1
+
+        let mut rng = rand::rng();
+        Duration::from_secs_f64(
+            rng.random_range(0.0..=self.shutter_speed.as_secs_f64()),
+        )
     }
 }
 
@@ -66,6 +112,9 @@ pub struct CamBuilder {
     pub fov: Degrees,
     pub defocus_angle: Degrees,
     pub focus_dist: f64,
+    pub fps: usize,
+    pub shutter_speed: Duration,
+    pub frames: usize,
 }
 
 impl CamBuilder {
@@ -78,6 +127,9 @@ impl CamBuilder {
             fov: Degrees::new(90.0),
             defocus_angle: Degrees::new(0.0),
             focus_dist: 10.0,
+            fps: 24,
+            shutter_speed: Duration::from_secs_f64(1.0 / 48.0),
+            frames: 1,
         }
     }
 
@@ -118,6 +170,9 @@ impl CamBuilder {
             defocus_angle: self.defocus_angle,
             defocus_disk_u: u * defocus_r,
             defocus_disk_v: v * defocus_r,
+            fps: self.fps,
+            shutter_speed: self.shutter_speed,
+            frames: self.frames,
         }
     }
 }

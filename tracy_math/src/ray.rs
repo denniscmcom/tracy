@@ -23,7 +23,7 @@ pub struct Ray {
     pub orig: Point3D,
     pub dir: Vec3D,
     pub depth: usize,
-    pub ts: Duration,
+    pub norm_ts: Duration,
 }
 
 impl Ray {
@@ -32,7 +32,7 @@ impl Ray {
             orig,
             dir,
             depth: 1,
-            ts: Duration::from_secs(0),
+            norm_ts: Duration::from_secs(0),
         }
     }
 
@@ -49,7 +49,7 @@ pub mod bechmarks {
             orig: Point3D::new(1.0, 2.0, 3.0),
             dir: Vec3D::new(3.0, 2.0, 1.0),
             depth: 1,
-            ts: Duration::from_secs(0),
+            norm_ts: Duration::from_secs(0),
         };
 
         move || {

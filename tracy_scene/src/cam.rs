@@ -16,9 +16,8 @@ pub struct Cam {
     defocus_angle: Degrees,
     defocus_disk_u: Vec3D,
     defocus_disk_v: Vec3D,
-    fps: usize,
     shutter_speed: Duration,
-    frames: usize,
+    pub render_time: Duration,
 }
 
 impl Cam {
@@ -27,15 +26,10 @@ impl Cam {
             return ColorRGB::new(0.0, 0.0, 0.0);
         }
 
-        let geo = geo.at(
-            ray.ts,
-            Duration::from_secs_f64(self.frames as f64 / self.fps as f64),
-        );
-
         if let Some((hit, mat)) = geo.hit(&ray, 0.001..=f64::MAX) {
             loop {
                 if let Some(scatter_data) = mat.scatter(ray, hit) {
-                    return self.trace(scatter_data.ray, &geo)
+                    return self.trace(scatter_data.ray, geo)
                         * scatter_data.attenuation;
                 }
 
@@ -170,9 +164,10 @@ impl CamBuilder {
             defocus_angle: self.defocus_angle,
             defocus_disk_u: u * defocus_r,
             defocus_disk_v: v * defocus_r,
-            fps: self.fps,
             shutter_speed: self.shutter_speed,
-            frames: self.frames,
+            render_time: Duration::from_secs_f64(
+                self.frames as f64 / self.fps as f64,
+            ),
         }
     }
 }

@@ -19,7 +19,7 @@ impl Point3D {
         Self { x, y, z }
     }
 
-    pub fn lerp(&self, b: Point3D, t: f64) -> Self {
+    pub fn lerp(&self, b: &Point3D, t: f64) -> Self {
         Self {
             x: lerp(self.x, b.x, t),
             y: lerp(self.y, b.y, t),

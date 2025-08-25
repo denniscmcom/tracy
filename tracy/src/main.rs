@@ -6,6 +6,8 @@ use tracy_math::{ColorRGB, Point3D, Vec3D, unit::Degrees};
 use tracy_render::Renderer;
 use tracy_scene::{Scene, cam::CamBuilder, geo::Sphere, mat};
 
+// TODO: Implement a standalone type for normalized values.
+
 fn main() {
     let start = time::Instant::now();
     run();
@@ -17,7 +19,7 @@ fn run() {
         orig: Point3D::new(13.0, 2.0, 3.0),
         at: Point3D::new(0.0, 0.0, 0.0),
         up: Vec3D::new(0.0, 1.0, 0.0),
-        img_w: 400,
+        img_w: 1200,
         fov: Degrees::new(20.0),
         defocus_angle: Degrees::new(0.6),
         focus_dist: 10.0,
@@ -63,7 +65,6 @@ fn run() {
                                 albedo: color_a * color_b,
                             }),
                             orig_2: Some(orig + Vec3D::new(0.0, 0.5, 0.0)),
-                            // orig_2: None,
                         });
                     }
                     // Metal.

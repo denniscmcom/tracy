@@ -30,7 +30,7 @@ impl Mat for Lambert {
                 orig: hit.orig,
                 dir,
                 depth: ray.depth - 1,
-                ts: ray.ts,
+                norm_ts: ray.norm_ts,
             },
             attenuation: self.albedo,
         });
@@ -57,7 +57,7 @@ impl Mat for Metal {
                 orig: hit.orig,
                 dir,
                 depth: ray.depth - 1,
-                ts: ray.ts,
+                norm_ts: ray.norm_ts,
             },
             attenuation: self.albedo,
         })
@@ -94,7 +94,7 @@ impl Mat for Dielectric {
                 orig: hit.orig,
                 dir,
                 depth: ray.depth - 1,
-                ts: ray.ts,
+                norm_ts: ray.norm_ts,
             },
             attenuation: ColorRGB::new(1.0, 1.0, 1.0),
         })

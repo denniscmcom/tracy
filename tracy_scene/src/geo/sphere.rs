@@ -2,7 +2,7 @@ use crate::{
     geo::{Face, Geo, Hit, HitData},
     mat::{self, Mat},
 };
-use std::{ops::RangeInclusive, sync::Arc, time};
+use std::{ops::RangeInclusive, sync::Arc, time::Duration};
 use tracy_math::{ColorRGB, Point3D, Ray};
 
 pub struct Sphere {
@@ -23,11 +23,20 @@ impl Sphere {
             orig_2: None,
         }
     }
+
+    pub fn orig_at(&self, norm_ts: Duration) -> Point3D {
+        if let Some(orig_2) = self.orig_2 {
+            return self.orig.lerp(&orig_2, norm_ts.as_secs_f64());
+        }
+
+        self.orig
+    }
 }
 
 impl Geo for Sphere {
     fn hit(&self, ray: &Ray, range: RangeInclusive<f64>) -> HitData {
-        let oc = self.orig - ray.orig;
+        let lerp_orig = self.orig_at(ray.norm_ts);
+        let oc = lerp_orig - ray.orig;
         let a = ray.dir.len_2();
         let h = ray.dir.dot(&oc);
         let c = oc.len_2() - self.r * self.r;
@@ -48,8 +57,8 @@ impl Geo for Sphere {
             }
         }
 
-        let orig = ray.at(root);
-        let norm = (orig - self.orig) / self.r;
+        let p = ray.at(root);
+        let norm = (p - lerp_orig) / self.r;
         let (out_norm, face) = if ray.dir.dot(&norm) <= 0.0 {
             (norm, Face::Front)
         } else {
@@ -58,31 +67,12 @@ impl Geo for Sphere {
 
         let hit = Hit {
             norm: out_norm,
-            orig,
+            orig: p,
             ray_t: root,
             face,
         };
 
         Some((hit, Arc::clone(&self.mat)))
-    }
-
-    fn at(&self, ts: time::Duration, total: time::Duration) -> Self {
-        if let Some(orig_2) = self.orig_2 {
-            let p = ts.as_secs_f64() / total.as_secs_f64();
-            return Self {
-                orig: self.orig.lerp(orig_2, p),
-                r: self.r,
-                mat: Arc::clone(&self.mat),
-                orig_2: Some(orig_2.clone()),
-            };
-        }
-
-        Self {
-            orig: self.orig,
-            r: self.r,
-            mat: Arc::clone(&self.mat),
-            orig_2: None,
-        }
     }
 }
 
@@ -101,10 +91,6 @@ impl Geo for Vec<Sphere> {
 
         hits.into_iter()
             .min_by(|a, b| a.0.ray_t.partial_cmp(&b.0.ray_t).unwrap())
-    }
-
-    fn at(&self, ts: time::Duration, total: time::Duration) -> Self {
-        self.into_iter().map(|s| s.at(ts, total)).collect()
     }
 }
 

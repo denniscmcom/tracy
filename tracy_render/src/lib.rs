@@ -1,4 +1,5 @@
 use rayon::prelude::*;
+use std::time::Duration;
 use tracy_macros::Random;
 use tracy_math::{ColorRGB, Point2D, Ray, Vec2D};
 use tracy_scene::{Geo, Scene};
@@ -46,7 +47,10 @@ impl Renderer {
                         orig: ray_orig,
                         dir: px_sample - ray_orig,
                         depth: self.depth,
-                        ts: cam.sample_time(),
+                        norm_ts: Duration::from_secs_f64(
+                            cam.sample_time().as_secs_f64()
+                                / cam.render_time.as_secs_f64(),
+                        ),
                     };
 
                     px += cam.trace(ray, &scene.geo);

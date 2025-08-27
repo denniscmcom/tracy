@@ -26,6 +26,10 @@ impl Point3D {
             z: lerp(self.z, b.z, t),
         }
     }
+
+    pub fn as_array(&self) -> [f64; 3] {
+        [self.x, self.y, self.z]
+    }
 }
 
 #[derive(Clone, Copy, Default, Random, Neg)]

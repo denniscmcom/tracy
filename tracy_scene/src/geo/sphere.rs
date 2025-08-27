@@ -24,7 +24,7 @@ impl Sphere {
         }
     }
 
-    pub fn orig_at(&self, norm_ts: Duration) -> Point3D {
+    fn orig_at(&self, norm_ts: Duration) -> Point3D {
         if let Some(orig_2) = self.orig_2 {
             return self.orig.lerp(&orig_2, norm_ts.as_secs_f64());
         }

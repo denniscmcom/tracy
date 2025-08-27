@@ -9,5 +9,6 @@ members = [
 	"tracy_macros_impl",
 	"tracy_math",
 	"tracy_render",
+	"tracy_render_view",
 	"tracy_scene",
 ]

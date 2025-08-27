@@ -1,9 +1,11 @@
+pub mod aabb;
 pub mod cam;
 pub mod geo;
 pub mod keyframe;
 pub mod mat;
 pub mod scene;
 
+pub use aabb::Aabb;
 pub use cam::Cam;
 pub use geo::Geo;
 pub use keyframe::Keyframe;

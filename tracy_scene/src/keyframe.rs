@@ -1,6 +1,5 @@
-use std::time;
-
+// TODO: Pending implementation
 pub struct Keyframe<T> {
     pub val: T,
-    pub ts: time::Duration,
+    pub frame: usize,
 }

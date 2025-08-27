@@ -4,36 +4,57 @@ use tracy_macros::Random;
 use tracy_math::{ColorRGB, Point2D, Ray, Vec2D};
 use tracy_scene::{Geo, Scene};
 
-pub struct Buf {
-    pub px_data: Vec<ColorRGB<u8>>,
+pub type Frame = Vec<ColorRGB<f64>>;
+
+pub struct FrameBuf {
+    pub frame: Frame,
     pub rows: usize,
 }
 
-impl Buf {
-    fn new(cols: usize, rows: usize) -> Self {
+impl FrameBuf {
+    pub fn new(cols: usize, rows: usize) -> Self {
         Self {
-            px_data: Vec::with_capacity(cols * rows),
+            frame: Vec::with_capacity(cols * rows),
             rows,
         }
     }
 }
 
 pub struct Renderer {
+    // TODO: Split samples per pixel for each dimension (time, anti-aliasing,
+    // motion blur...).
     pub spp: usize,
     pub depth: usize,
 }
 
 impl Renderer {
-    pub fn render<T>(&self, scene: &Scene<T>) -> Buf
+    pub fn render<T>(&self, scene: &Scene<T>) -> Vec<FrameBuf>
+    where
+        T: Geo + Sync,
+    {
+        let frames = scene.cam.frames;
+        let mut buf = Vec::with_capacity(frames);
+
+        for frame in 0..frames {
+            buf.push(self.render_frame(frame, scene));
+        }
+
+        buf
+    }
+
+    fn render_frame<T>(&self, frame: usize, scene: &Scene<T>) -> FrameBuf
     where
         T: Geo + Sync,
     {
         let cam = &scene.cam;
-        let mut buf = Buf::new(cam.img_w, cam.img_h);
-        buf.px_data = (0..cam.img_w * cam.img_h)
+        let mut frame_buf = FrameBuf::new(cam.img_w, cam.img_h);
+        let pixels = 0..cam.img_w * cam.img_h;
+
+        frame_buf.frame = pixels
             .into_par_iter()
             .map(|i| {
                 let (x, y) = (i % cam.img_w, i / cam.img_w);
+
                 let mut px = ColorRGB::new(0.0, 0.0, 0.0);
 
                 for _ in 0..self.spp {
@@ -47,6 +68,7 @@ impl Renderer {
                         orig: ray_orig,
                         dir: px_sample - ray_orig,
                         depth: self.depth,
+                        // FIXME: Assuming frames = 1
                         norm_ts: Duration::from_secs_f64(
                             cam.sample_time().as_secs_f64()
                                 / cam.render_time.as_secs_f64(),
@@ -57,11 +79,11 @@ impl Renderer {
                 }
 
                 px *= 1.0 / self.spp as f64;
-                px.to_gamma().scale()
+                px.to_gamma()
             })
             .collect();
 
-        buf
+        frame_buf
     }
 }
 

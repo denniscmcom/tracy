@@ -17,9 +17,7 @@ impl Vec3D {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
     }
-}
 
-impl Vec3D {
     pub fn len_2(&self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
@@ -37,6 +35,10 @@ impl Vec3D {
 
     pub fn normalize(&self) -> Vec3D {
         *self / self.len_2().sqrt()
+    }
+
+    pub fn as_array(&self) -> [f64; 3] {
+        [self.x, self.y, self.z]
     }
 }
 

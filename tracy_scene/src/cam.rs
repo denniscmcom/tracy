@@ -10,6 +10,8 @@ pub struct Cam {
     pub orig: Point3D,
     pub img_w: usize,
     pub img_h: usize,
+    pub render_time: Duration,
+    pub frames: usize,
     vw_du: Vec3D,
     vw_dv: Vec3D,
     px_00: Point3D,
@@ -17,7 +19,6 @@ pub struct Cam {
     defocus_disk_u: Vec3D,
     defocus_disk_v: Vec3D,
     shutter_speed: Duration,
-    pub render_time: Duration,
 }
 
 impl Cam {
@@ -69,8 +70,6 @@ impl Cam {
     }
 
     pub fn sample_time(&self) -> Duration {
-        // FIXME: Assuming frames = 1
-
         let mut rng = rand::rng();
         Duration::from_secs_f64(
             rng.random_range(0.0..=self.shutter_speed.as_secs_f64()),
@@ -158,6 +157,10 @@ impl CamBuilder {
             orig: self.orig,
             img_w: self.img_w,
             img_h,
+            render_time: Duration::from_secs_f64(
+                self.frames as f64 / self.fps as f64,
+            ),
+            frames: self.frames,
             vw_du,
             vw_dv,
             px_00,
@@ -165,9 +168,6 @@ impl CamBuilder {
             defocus_disk_u: u * defocus_r,
             defocus_disk_v: v * defocus_r,
             shutter_speed: self.shutter_speed,
-            render_time: Duration::from_secs_f64(
-                self.frames as f64 / self.fps as f64,
-            ),
         }
     }
 }

@@ -11,7 +11,7 @@ members = [
 	"tracy_math",
 	"tracy_render",
 	"tracy_render_view",
-	"tracy_scene",
+	"tracy_scene", "tracy_traits",
 ]
 
 resolver = "3"

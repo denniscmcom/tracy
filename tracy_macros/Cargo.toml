@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 tracy_macros_attr = { version = "0.1.0", path = "../tracy_macros_attr" }
 tracy_macros_derive = { version = "0.1.0", path = "../tracy_macros_derive" }
+tracy_traits = { version = "0.1.0", path = "../tracy_traits" }

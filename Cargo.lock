@@ -1790,6 +1790,7 @@ dependencies = [
 name = "tracy_export"
 version = "0.1.0"
 dependencies = [
+ "tracy_macros",
  "tracy_render",
 ]
 
@@ -1809,6 +1810,7 @@ version = "0.1.0"
 dependencies = [
  "tracy_macros_attr",
  "tracy_macros_derive",
+ "tracy_traits",
 ]
 
 [[package]]
@@ -1844,6 +1846,7 @@ version = "0.1.0"
 dependencies = [
  "rand",
  "tracy_macros",
+ "tracy_traits",
 ]
 
 [[package]]
@@ -1862,6 +1865,7 @@ name = "tracy_render_view"
 version = "0.1.0"
 dependencies = [
  "pollster",
+ "tracy_macros",
  "tracy_math",
  "tracy_render",
  "tracy_scene",
@@ -1877,6 +1881,10 @@ dependencies = [
  "tracy_macros",
  "tracy_math",
 ]
+
+[[package]]
+name = "tracy_traits"
+version = "0.1.0"
 
 [[package]]
 name = "ttf-parser"

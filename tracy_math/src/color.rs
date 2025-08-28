@@ -1,6 +1,8 @@
-use tracy_macros::{Random, add, div, mul, sub};
+use tracy_macros::{Color, Convert, Random, add, div, mul, sub};
+use tracy_traits::ColorType;
 
-#[derive(Clone, Copy, Default, Random)]
+#[derive(Clone, Copy, Default, Random, Convert, Color)]
+// TODO: #[ops(add, sub, mul, mul(rhs = T), div(rhs = T))]
 #[add]
 #[sub]
 #[mul]
@@ -8,7 +10,7 @@ use tracy_macros::{Random, add, div, mul, sub};
 #[div(rhs = T)]
 pub struct ColorRGB<T>
 where
-    T: Clone + Copy,
+    T: Clone + Copy + ColorType,
 {
     pub r: T,
     pub g: T,
@@ -17,15 +19,10 @@ where
 
 impl<T> ColorRGB<T>
 where
-    T: Clone + Copy,
+    T: Clone + Copy + ColorType,
 {
     pub fn new(r: T, g: T, b: T) -> Self {
         Self { r, g, b }
-    }
-
-    // TODO: Put this in a macro.
-    pub fn as_array(&self) -> [T; 3] {
-        [self.r, self.g, self.b]
     }
 
     pub fn to_rgba(&self, a: T) -> ColorRGBA<T> {
@@ -33,29 +30,7 @@ where
     }
 }
 
-impl ColorRGB<f64> {
-    // TODO: Put this in a macro.
-    pub fn to_u8(self) -> ColorRGB<u8> {
-        ColorRGB {
-            r: (self.r.clamp(0.0, 1.0) * 255.0) as u8,
-            g: (self.g.clamp(0.0, 1.0) * 255.0) as u8,
-            b: (self.b.clamp(0.0, 1.0) * 255.0) as u8,
-        }
-    }
-
-    // TODO: Put this in a macro.
-    pub fn to_gamma(&self) -> ColorRGB<f64> {
-        Self {
-            r: f64::max(self.r, 0.0).sqrt(),
-            g: f64::max(self.g, 0.0).sqrt(),
-            b: f64::max(self.b, 0.0).sqrt(),
-        }
-    }
-
-    // TODO: Add clamp method to color and put it in a macro.
-}
-
-#[derive(Clone, Copy, Default, Random)]
+#[derive(Clone, Copy, Default, Random, Convert, Color)]
 #[add]
 #[sub]
 #[mul]
@@ -63,7 +38,7 @@ impl ColorRGB<f64> {
 #[div(rhs = T)]
 pub struct ColorRGBA<T>
 where
-    T: Clone + Copy,
+    T: Clone + Copy + ColorType,
 {
     pub r: T,
     pub g: T,
@@ -73,27 +48,14 @@ where
 
 impl<T> ColorRGBA<T>
 where
-    T: Clone + Copy,
+    T: Clone + Copy + ColorType,
 {
     pub fn new(r: T, g: T, b: T, a: T) -> Self {
         Self { r, g, b, a }
     }
 
-    // TODO: Put this in a macro.
-    pub fn as_array(&self) -> [T; 4] {
-        [self.r, self.g, self.b, self.a]
-    }
-}
-
-impl ColorRGBA<f64> {
-    // TODO: Put this in a macro.
-    pub fn to_u8(&self) -> ColorRGBA<u8> {
-        ColorRGBA {
-            r: (self.r.clamp(0.0, 1.0) * 255.0) as u8,
-            g: (self.g.clamp(0.0, 1.0) * 255.0) as u8,
-            b: (self.b.clamp(0.0, 1.0) * 255.0) as u8,
-            a: (self.a.clamp(0.0, 1.0) * 255.0) as u8,
-        }
+    pub fn to_rgb(&self) -> ColorRGB<T> {
+        ColorRGB::new(self.r, self.g, self.b)
     }
 }
 

@@ -1,4 +1,5 @@
 use std::{fs, io::prelude::*, path};
+use tracy_macros::Color;
 use tracy_render::FrameBuf;
 
 pub fn export(buf: Vec<FrameBuf>) -> std::io::Result<()> {

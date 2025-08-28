@@ -1,5 +1,6 @@
 use crate::graphics::{Frame, Graphics};
 use std::sync::Arc;
+use tracy_macros::{Color, Convert};
 use winit::window::Window as WindowHandle;
 
 pub struct Wgpu {

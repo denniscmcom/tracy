@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 rand = "0.9.2"
 tracy_macros = { version = "0.1.0", path = "../tracy_macros" }
+tracy_traits = { version = "0.1.0", path = "../tracy_traits" }

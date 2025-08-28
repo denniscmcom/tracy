@@ -1,6 +1,6 @@
 use rayon::prelude::*;
 use std::time::Duration;
-use tracy_macros::Random;
+use tracy_macros::{Color, Random};
 use tracy_math::{ColorRGB, Point2D, Ray, Vec2D};
 use tracy_scene::{Geo, Scene};
 

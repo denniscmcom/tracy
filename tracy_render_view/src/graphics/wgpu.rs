@@ -1,51 +1,34 @@
+use crate::graphics::{Frame, Graphics};
 use std::sync::Arc;
-use tracy_math::color::ColorRGB;
-use tracy_render::Frame;
-use winit::window::Window;
+use winit::window::Window as WindowHandle;
 
-pub struct FrameBuf {
-    pub frame: Frame,
-    pub spp: usize,
-}
-
-impl FrameBuf {
-    pub fn new(px_data: Frame) -> Self {
-        Self {
-            frame: px_data,
-            spp: 1,
-        }
-    }
-}
-
-pub struct RTRenderer {
-    pub window: Arc<Window>,
+pub struct Wgpu {
     surface: wgpu::Surface<'static>,
     device: wgpu::Device,
     queue: wgpu::Queue,
     texture: wgpu::Texture,
     bind_group: wgpu::BindGroup,
     pipeline: wgpu::RenderPipeline,
-    frame_buf: FrameBuf,
 }
 
-impl RTRenderer {
-    pub async fn new(window: Arc<Window>) -> Self {
+impl Graphics for Wgpu {
+    fn new(window_handler: Arc<WindowHandle>, tex_w: u32, tex_h: u32) -> Self {
         let instance =
             wgpu::Instance::new(&wgpu::InstanceDescriptor::default());
 
         let surface = instance
-            .create_surface(Arc::clone(&window))
+            .create_surface(Arc::clone(&window_handler))
             .expect("failed to create surface");
 
-        let adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions::default())
-            .await
-            .expect("failed to create adapter");
+        let adapter = pollster::block_on(
+            instance.request_adapter(&wgpu::RequestAdapterOptions::default()),
+        )
+        .expect("failed to create adapter");
 
-        let (device, queue) = adapter
-            .request_device(&wgpu::DeviceDescriptor::default())
-            .await
-            .expect("failed to create device and queue");
+        let (device, queue) = pollster::block_on(
+            adapter.request_device(&wgpu::DeviceDescriptor::default()),
+        )
+        .expect("failed to create device and queue");
 
         let surface_caps = surface.get_capabilities(&adapter);
         let surface_format = surface_caps
@@ -55,7 +38,7 @@ impl RTRenderer {
             .copied()
             .expect("failed to find SRGB format");
 
-        let window_size = window.inner_size();
+        let window_size = window_handler.inner_size();
 
         let surface_config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
@@ -70,12 +53,12 @@ impl RTRenderer {
 
         surface.configure(&device, &surface_config);
         let shader = device.create_shader_module(wgpu::include_wgsl!(
-            "../shaders/shaders.wgsl"
+            "../../shaders/shaders.wgsl"
         ));
 
         let texture_size = wgpu::Extent3d {
-            width: window.inner_size().width,
-            height: window.inner_size().height,
+            width: tex_w,
+            height: tex_h,
             depth_or_array_layers: 1,
         };
 
@@ -207,26 +190,16 @@ impl RTRenderer {
         let pipeline = device.create_render_pipeline(&render_pipeline_desc);
 
         Self {
-            window,
             surface,
             device,
             queue,
             texture,
             bind_group,
             pipeline,
-            frame_buf: FrameBuf::new(vec![
-                ColorRGB::new(0.0, 0.0, 0.0);
-                (window_size.width * window_size.height)
-                    as usize
-            ]),
         }
     }
 
-    pub fn update(&mut self, frame: &Frame) {
-        for (dst, src) in self.frame_buf.frame.iter_mut().zip(frame.iter()) {
-            *dst += *src;
-        }
-
+    fn update(&mut self, buf: &Frame) {
         let texel_copy_texture_info = wgpu::TexelCopyTextureInfo {
             texture: &self.texture,
             mip_level: 0,
@@ -240,15 +213,8 @@ impl RTRenderer {
             rows_per_image: Some(self.texture.height()),
         };
 
-        let inv_spp = 1.0 / self.frame_buf.spp as f64;
-        let buf: Vec<u8> = self
-            .frame_buf
-            .frame
-            .iter()
-            .flat_map(|c| (*c * inv_spp).to_rgba(1.0).to_u8().as_array())
-            .collect();
-
-        self.frame_buf.spp += 1;
+        let buf: Vec<u8> =
+            buf.iter().flat_map(|c| c.to_u8().as_array()).collect();
 
         self.queue.write_texture(
             texel_copy_texture_info,
@@ -258,7 +224,7 @@ impl RTRenderer {
         );
     }
 
-    pub fn render(&self) {
+    fn render(&self) {
         let frame = self
             .surface
             .get_current_texture()
@@ -298,9 +264,5 @@ impl RTRenderer {
 
         self.queue.submit(Some(encoder.finish()));
         frame.present();
-    }
-
-    pub fn current_spp(&self) -> usize {
-        self.frame_buf.spp
     }
 }

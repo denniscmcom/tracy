@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 tracy_render = { version = "0.1.0", path = "../tracy_render" }
 tracy_scene = { version = "0.1.0", path = "../tracy_scene" }
+tracy_math = { version = "0.1.0", path = "../tracy_math" }
 pollster = "0.4.0"
 wgpu = "26.0.1"
 winit = "0.30.12"
-tracy_math = { version = "0.1.0", path = "../tracy_math" }

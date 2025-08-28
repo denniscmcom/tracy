@@ -3,7 +3,7 @@ use std::time;
 use tracy_export::export;
 use tracy_import::sample_scene;
 use tracy_render::Renderer;
-use tracy_render_view::RenderView;
+use tracy_render_view::{RenderViewApp, RenderViewAppDesc};
 
 // TODO: Implement a standalone type for normalized values.
 
@@ -12,8 +12,13 @@ fn main() {
     let args = Args::parse();
 
     if args.render_view {
-        let mut render_view = RenderView::new(sample_scene());
-        render_view.run();
+        let render_view_app_desc = RenderViewAppDesc {
+            scene: sample_scene(),
+            spp: 50,
+        };
+
+        let mut render_view_app = RenderViewApp::new(render_view_app_desc);
+        render_view_app.run();
     } else {
         run();
     }

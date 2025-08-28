@@ -1,9 +1,10 @@
 [package]
-name = "tracy_macros_impl"
+name = "tracy_macros_attr"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+tracy_macros_helper = { version = "0.1.0", path = "../tracy_macros_helper" }
 proc-macro2 = "1.0.95"
 quote = "1.0.40"
 syn = "2.0.104"

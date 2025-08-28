@@ -1,7 +1,7 @@
-use crate::io::StructInput;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{GenericParam, parse_quote};
+use tracy_macros_helper::StructInput;
 
 pub fn impl_random_macro(input: StructInput) -> TokenStream {
     let mut gens = input.ast.generics.clone();

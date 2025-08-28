@@ -1,6 +1,6 @@
-use crate::io::StructInput;
 use proc_macro::TokenStream;
 use quote::quote;
+use tracy_macros_helper::StructInput;
 
 pub fn impl_neg_macro(input: StructInput) -> TokenStream {
     let gens = input.ast.generics.clone();

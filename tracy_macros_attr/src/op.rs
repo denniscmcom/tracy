@@ -1,83 +1,38 @@
-use crate::io::StructInput;
+use crate::attr::Attr;
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{ToTokens, quote};
-use syn::{
-    GenericParam, Ident, Token, Type,
-    parse::{Parse, ParseStream},
-    parse_quote,
-};
+use syn::{GenericParam, Type, parse_quote};
+use tracy_macros_helper::StructInput;
 
 pub fn impl_add_macro(attr: Attr, input: StructInput) -> TokenStream {
-    let mut math_op = MathOp::new(MathOpTy::Add);
+    let mut math_op = Op::new(OpTy::Add);
     math_op.generate(attr, input).into()
 }
 
 pub fn impl_sub_macro(attr: Attr, input: StructInput) -> TokenStream {
-    let mut math_op = MathOp::new(MathOpTy::Sub);
+    let mut math_op = Op::new(OpTy::Sub);
     math_op.generate(attr, input).into()
 }
 
 pub fn impl_mul_macro(attr: Attr, input: StructInput) -> TokenStream {
-    let mut math_op = MathOp::new(MathOpTy::Mul);
+    let mut math_op = Op::new(OpTy::Mul);
     math_op.generate(attr, input).into()
 }
 
 pub fn impl_div_macro(attr: Attr, input: StructInput) -> TokenStream {
-    let mut math_op = MathOp::new(MathOpTy::Div);
+    let mut math_op = Op::new(OpTy::Div);
     math_op.generate(attr, input).into()
 }
 
-pub struct Attr {
-    pub lhs_ty: Option<Type>,
-    pub rhs_ty: Option<Type>,
-    pub out_ty: Option<Type>,
-}
-
-impl Parse for Attr {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let mut lhs_ty: Option<Type> = None;
-        let mut rhs_ty: Option<Type> = None;
-        let mut out_ty: Option<Type> = None;
-
-        while !input.is_empty() {
-            let key: Ident = input.parse()?;
-            input.parse::<Token![=]>()?;
-            let val: Type = input.parse()?;
-
-            match key.to_string().as_str() {
-                "lhs" => lhs_ty = Some(val),
-                "rhs" => rhs_ty = Some(val),
-                "out" => out_ty = Some(val),
-                other => {
-                    return Err(syn::Error::new(
-                        key.span(),
-                        format!("unknown attribute key `{}`", other),
-                    ));
-                }
-            }
-
-            if input.peek(Token![,]) {
-                input.parse::<Token![,]>()?;
-            }
-        }
-
-        Ok(Self {
-            lhs_ty,
-            rhs_ty,
-            out_ty,
-        })
-    }
-}
-
-enum MathOpTy {
+pub enum OpTy {
     Add,
     Sub,
     Mul,
     Div,
 }
 
-struct MathOp {
+pub struct Op {
     op: TokenStream2,
     op_trait: TokenStream2,
     op_fn: TokenStream2,
@@ -87,8 +42,8 @@ struct MathOp {
     scalars: Vec<String>,
 }
 
-impl MathOp {
-    fn new(op_ty: MathOpTy) -> Self {
+impl Op {
+    pub fn new(op_ty: OpTy) -> Self {
         let scalars = vec![
             "f32", "f64", "u8", "u16", "u32", "u64", "usize", "i8", "i16",
             "i32", "i64", "isize",
@@ -98,7 +53,7 @@ impl MathOp {
         .collect();
 
         match op_ty {
-            MathOpTy::Add => {
+            OpTy::Add => {
                 return Self {
                     op: quote! {+},
                     op_trait: quote! {std::ops::Add},
@@ -110,7 +65,7 @@ impl MathOp {
                 };
             }
 
-            MathOpTy::Sub => {
+            OpTy::Sub => {
                 return Self {
                     op: quote! {-},
                     op_trait: quote! {std::ops::Sub},
@@ -121,7 +76,7 @@ impl MathOp {
                     scalars,
                 };
             }
-            MathOpTy::Mul => {
+            OpTy::Mul => {
                 return Self {
                     op: quote! {*},
                     op_trait: quote! {std::ops::Mul},
@@ -132,7 +87,7 @@ impl MathOp {
                     scalars,
                 };
             }
-            MathOpTy::Div => {
+            OpTy::Div => {
                 return Self {
                     op: quote! {/},
                     op_trait: quote! {std::ops::Div},
@@ -151,7 +106,7 @@ impl MathOp {
     // 10.0 degress / 5.0 degrees = 2.0 (unitless)
     // #[div(out = f64)]
     // struct Degrees(f64)
-    fn generate(&mut self, attr: Attr, input: StructInput) -> TokenStream2 {
+    pub fn generate(&mut self, attr: Attr, input: StructInput) -> TokenStream2 {
         let mut gens = input.ast.generics.clone();
         let mut where_clause = gens.make_where_clause().clone();
 

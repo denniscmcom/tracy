@@ -1,13 +1,15 @@
-use tracy_macros::{Neg, Random, add, div, mul, sub};
+use tracy_macros::{Neg, Random, ops};
 
 #[derive(Copy, Clone, Random, Neg)]
-#[add]
-#[add(lhs = f64, rhs = f64)]
-#[sub]
-#[sub(lhs = f64, rhs = f64)]
-#[mul]
-#[mul(lhs = f64, rhs = f64)]
-#[div(lhs = f64, rhs = f64)]
+#[ops(
+    add,
+    add(lhs = f64, rhs = f64),
+    sub,
+    sub(lhs = f64, rhs = f64),
+    mul,
+    mul(lhs = f64, rhs = f64),
+    div(lhs = f64, rhs = f64)
+)]
 pub struct Degrees(f64);
 
 impl Degrees {
@@ -25,13 +27,15 @@ impl Degrees {
 }
 
 #[derive(Copy, Clone, Random, Neg)]
-#[add]
-#[add(lhs = f64, rhs = f64)]
-#[sub]
-#[sub(lhs = f64, rhs = f64)]
-#[mul]
-#[mul(lhs = f64, rhs = f64)]
-#[div(lhs = f64, rhs = f64)]
+#[ops(
+    add,
+    add(lhs = f64, rhs = f64),
+    sub,
+    sub(lhs = f64, rhs = f64),
+    mul,
+    mul(lhs = f64, rhs = f64),
+    div(lhs = f64, rhs = f64)
+)]
 pub struct Radians(f64);
 
 impl Radians {

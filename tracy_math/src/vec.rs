@@ -1,12 +1,14 @@
-use tracy_macros::{Neg, Random, add, div, mul, sub};
+use tracy_macros::{Neg, Random, ops};
 
 // TODO: Add a separate type for unit vector.
 
 #[derive(Clone, Copy, Default, Random, Neg)]
-#[add]
-#[sub]
-#[mul(lhs = f64, rhs = f64)]
-#[div(lhs = f64, rhs = f64)]
+#[ops(
+    add,
+    sub,
+    mul(lhs = f64, rhs = f64),
+    div(lhs = f64, rhs = f64)
+)]
 pub struct Vec3D {
     pub x: f64,
     pub y: f64,
@@ -43,10 +45,12 @@ impl Vec3D {
 }
 
 #[derive(Clone, Copy, Default, Random, Neg)]
-#[add]
-#[sub]
-#[mul(lhs = f64)]
-#[div(lhs = f64)]
+#[ops(
+    add,
+    sub,
+    mul(lhs = f64, rhs = f64),
+    div(lhs = f64, rhs = f64)
+)]
 pub struct Vec2D {
     pub x: f64,
     pub y: f64,

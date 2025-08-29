@@ -2,12 +2,14 @@ use crate::{
     num::lerp,
     vec::{Vec2D, Vec3D},
 };
-use tracy_macros::{Neg, Random, add, sub};
+use tracy_macros::{Neg, Random, ops};
 
 #[derive(Clone, Copy, Default, Random, Neg)]
-#[add(rhs = Vec3D, lhs = Vec3D)]
-#[sub(rhs = Vec3D, lhs = Vec3D)]
-#[sub(out = Vec3D)]
+#[ops(
+    add(rhs = Vec3D, lhs = Vec3D), 
+    sub(rhs = Vec3D, lhs = Vec3D), 
+    sub(out = Vec3D)
+)]
 pub struct Point3D {
     pub x: f64,
     pub y: f64,
@@ -33,9 +35,11 @@ impl Point3D {
 }
 
 #[derive(Clone, Copy, Default, Random, Neg)]
-#[add(rhs = Vec2D, lhs = Vec2D)]
-#[sub(rhs = Vec2D, lhs = Vec2D)]
-#[sub(out = Vec2D)]
+#[ops(
+    add(rhs = Vec2D, lhs = Vec2D), 
+    sub(rhs = Vec2D, lhs = Vec2D), 
+    sub(out = Vec2D)
+)]
 pub struct Point2D {
     pub x: f64,
     pub y: f64,

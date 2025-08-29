@@ -1,13 +1,8 @@
-use tracy_macros::{Color, Convert, Random, add, div, mul, sub};
+use tracy_macros::{Color, Convert, Random, ops};
 use tracy_traits::ColorType;
 
 #[derive(Clone, Copy, Default, Random, Convert, Color)]
-// TODO: #[ops(add, sub, mul, mul(rhs = T), div(rhs = T))]
-#[add]
-#[sub]
-#[mul]
-#[mul(rhs = T)]
-#[div(rhs = T)]
+#[ops(add, sub, mul, mul(rhs = T), div(rhs = T))]
 pub struct ColorRGB<T>
 where
     T: Clone + Copy + ColorType,
@@ -31,11 +26,7 @@ where
 }
 
 #[derive(Clone, Copy, Default, Random, Convert, Color)]
-#[add]
-#[sub]
-#[mul]
-#[mul(rhs = T)]
-#[div(rhs = T)]
+#[ops(add, sub, mul, mul(rhs = T), div(rhs = T))]
 pub struct ColorRGBA<T>
 where
     T: Clone + Copy + ColorType,

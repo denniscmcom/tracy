@@ -1,5 +1,5 @@
 use std::ops::Range;
-pub use tracy_macros_attr::{add, div, mul, sub};
+pub use tracy_macros_attr::{add, div, mul, ops, sub};
 pub use tracy_macros_derive::{Color, Convert, Neg, Random};
 
 pub trait Random<T> {

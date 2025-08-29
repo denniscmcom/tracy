@@ -1,28 +1,160 @@
-use crate::attr::Attr;
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{ToTokens, quote};
-use syn::{GenericParam, Type, parse_quote};
+use std::fmt::Debug;
+use syn::{
+    GenericParam, Ident, Token, Type, parenthesized,
+    parse::{Parse, ParseStream},
+    parse_quote,
+    token::{self},
+};
 use tracy_macros_helper::StructInput;
 
-pub fn impl_add_macro(attr: Attr, input: StructInput) -> TokenStream {
-    let mut math_op = Op::new(OpTy::Add);
-    math_op.generate(attr, input).into()
+pub fn impl_ops_macro(attr: OpsAttr, input: StructInput) -> TokenStream {
+    let mut ts2 = TokenStream2::new();
+    let ast = &input.ast;
+    ts2.extend(quote! {#ast});
+
+    for (mut op, op_attr) in attr.ops {
+        ts2.extend(op.generate(op_attr, &input));
+    }
+
+    ts2.into()
 }
 
-pub fn impl_sub_macro(attr: Attr, input: StructInput) -> TokenStream {
-    let mut math_op = Op::new(OpTy::Sub);
-    math_op.generate(attr, input).into()
+pub fn impl_add_macro(attr: OpAttr, input: StructInput) -> TokenStream {
+    let mut op = Op::new(OpTy::Add);
+    let ast = &input.ast;
+    let generated = op.generate(attr, &input);
+    quote! {#ast #generated}.into()
 }
 
-pub fn impl_mul_macro(attr: Attr, input: StructInput) -> TokenStream {
-    let mut math_op = Op::new(OpTy::Mul);
-    math_op.generate(attr, input).into()
+pub fn impl_sub_macro(attr: OpAttr, input: StructInput) -> TokenStream {
+    let mut op = Op::new(OpTy::Sub);
+    let ast = &input.ast;
+    let generated = op.generate(attr, &input);
+    quote! {#ast #generated}.into()
 }
 
-pub fn impl_div_macro(attr: Attr, input: StructInput) -> TokenStream {
-    let mut math_op = Op::new(OpTy::Div);
-    math_op.generate(attr, input).into()
+pub fn impl_mul_macro(attr: OpAttr, input: StructInput) -> TokenStream {
+    let mut op = Op::new(OpTy::Mul);
+    let ast = &input.ast;
+    let generated = op.generate(attr, &input);
+    quote! {#ast #generated}.into()
+}
+
+pub fn impl_div_macro(attr: OpAttr, input: StructInput) -> TokenStream {
+    let mut op = Op::new(OpTy::Div);
+    let ast = &input.ast;
+    let generated = op.generate(attr, &input);
+    quote! {#ast #generated}.into()
+}
+
+pub struct OpsAttr {
+    pub ops: Vec<(Op, OpAttr)>,
+}
+
+impl Parse for OpsAttr {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let mut ops = Vec::new();
+
+        while !input.is_empty() {
+            let op: Op = match input.parse::<Ident>()?.to_string().as_str() {
+                "add" => Op::new(OpTy::Add),
+                "sub" => Op::new(OpTy::Sub),
+                "mul" => Op::new(OpTy::Mul),
+                "div" => Op::new(OpTy::Div),
+                _ => panic!("invalid op"),
+            };
+
+            let op_attr = if input.peek(token::Paren) {
+                let attrs;
+                parenthesized!(attrs in input);
+                attrs.parse::<OpAttr>()?
+            } else {
+                OpAttr::default()
+            };
+
+            ops.push((op, op_attr));
+            input.parse::<Option<Token![,]>>()?;
+        }
+
+        Ok(Self { ops })
+    }
+}
+
+#[derive(Default)]
+pub struct OpAttr {
+    pub lhs_ty: Option<Type>,
+    pub rhs_ty: Option<Type>,
+    pub out_ty: Option<Type>,
+}
+
+impl Parse for OpAttr {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let mut lhs_ty: Option<Type> = None;
+        let mut rhs_ty: Option<Type> = None;
+        let mut out_ty: Option<Type> = None;
+
+        while !input.is_empty() {
+            let key: Ident = input.parse()?;
+            input.parse::<Token![=]>()?;
+            let val: Type = input.parse()?;
+
+            match key.to_string().as_str() {
+                "lhs" => lhs_ty = Some(val),
+                "rhs" => rhs_ty = Some(val),
+                "out" => out_ty = Some(val),
+                other => {
+                    return Err(syn::Error::new(
+                        key.span(),
+                        format!("unknown attribute key `{}`", other),
+                    ));
+                }
+            }
+
+            if input.peek(Token![,]) {
+                input.parse::<Token![,]>()?;
+            }
+        }
+
+        Ok(Self {
+            lhs_ty,
+            rhs_ty,
+            out_ty,
+        })
+    }
+}
+
+impl Debug for OpAttr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("OpAttr")
+            .field(
+                "lhs_ty",
+                &self
+                    .lhs_ty
+                    .as_ref()
+                    .map(|t| t.to_token_stream().to_string())
+                    .unwrap_or_else(|| "None".to_string()),
+            )
+            .field(
+                "rhs_ty",
+                &self
+                    .rhs_ty
+                    .as_ref()
+                    .map(|t| t.to_token_stream().to_string())
+                    .unwrap_or_else(|| "None".to_string()),
+            )
+            .field(
+                "out_ty",
+                &self
+                    .out_ty
+                    .as_ref()
+                    .map(|t| t.to_token_stream().to_string())
+                    .unwrap_or_else(|| "None".to_string()),
+            )
+            .finish()
+    }
 }
 
 pub enum OpTy {
@@ -106,7 +238,18 @@ impl Op {
     // 10.0 degress / 5.0 degrees = 2.0 (unitless)
     // #[div(out = f64)]
     // struct Degrees(f64)
-    pub fn generate(&mut self, attr: Attr, input: StructInput) -> TokenStream2 {
+
+    // FIXME:
+    // This is valid:
+    // struct Test<T> where T: Clone + Copy
+    // This is not:
+    // struct Test<T: Clone + Copy>
+
+    pub fn generate(
+        &mut self,
+        attr: OpAttr,
+        input: &StructInput,
+    ) -> TokenStream2 {
         let mut gens = input.ast.generics.clone();
         let mut where_clause = gens.make_where_clause().clone();
 
@@ -126,7 +269,7 @@ impl Op {
         }
 
         let (impl_gens, ty_gens, _) = gens.split_for_impl();
-        let ident = input.ident;
+        let ident = &input.ident;
         let op_fn = &self.op_fn;
 
         let op = &self.op;
@@ -204,7 +347,6 @@ impl Op {
         };
 
         let mut tokens = Vec::new();
-        tokens.push(input.ast.to_token_stream());
 
         if let Some(lhs_ty) = attr.lhs_ty {
             tokens.push(build_op_lhs(&lhs_ty));
@@ -231,5 +373,18 @@ impl Op {
         }
 
         false
+    }
+}
+
+impl Debug for Op {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Op")
+            .field("op", &self.op.to_token_stream())
+            .field("op_trait", &self.op_trait.to_token_stream())
+            .field("op_fn", &self.op_fn.to_token_stream())
+            .field("op_assign", &self.op_assign.to_token_stream())
+            .field("op_assign_trait", &self.op_assign_trait)
+            .field("op_assign_fn", &self.op_assign_fn)
+            .finish()
     }
 }

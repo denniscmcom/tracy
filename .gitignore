@@ -1,14 +1,10 @@
-# Outputs.
+# IDE
+.vscode
+
+# Rust
+target
+
+# Tracy
+
+## Outputs.
 render/
-
-# Rust.
-/target
-
-# Swift.
-.build/
-Packages/
-xcuserdata/
-DerivedData/
-.swiftpm/configuration/registries.json
-.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
-.netrc

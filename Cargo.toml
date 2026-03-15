@@ -1,0 +1,17 @@
+[workspace]
+resolver = "3"
+members = [
+	"tracy",
+	"tracy_benchmark",
+	"tracy_export",
+	"tracy_import",
+	"tracy_macros",
+	"tracy_macros_attr",
+	"tracy_macros_derive",
+	"tracy_macros_helper",
+	"tracy_math",
+	"tracy_render",
+	"tracy_render_view",
+	"tracy_scene",
+	"tracy_traits",
+]

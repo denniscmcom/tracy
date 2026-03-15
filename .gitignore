@@ -1,10 +1,2 @@
-# IDE
-.vscode
-
-# Rust
-target
-
-# Tracy
-
-## Outputs.
+target/
 render/
